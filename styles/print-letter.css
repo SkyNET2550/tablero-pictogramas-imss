@@ -164,6 +164,11 @@ dialog::backdrop { background: #001b31cc; }
 .editor-properties > button { min-height: 38px; white-space: nowrap; }
 .semantic-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .editor-page { position: relative; width: 7.3in; min-height: 9.45in; margin: auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto 1fr; }
+.editor-page-sequence { width: min(7.3in, 100%); min-height: auto; padding: 0; background: transparent; box-shadow: none; display: flex; flex-direction: column; gap: 18px; }
+.editor-page-sheet { position: relative; width: 7.3in; min-height: 9.45in; max-width: 100%; margin: 0 auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto auto 1fr; }
+.editor-page-controls { display: flex; justify-content: flex-end; align-items: center; gap: 7px; margin-bottom: 7px; color: #2d526c; font-size: 12px; }
+.editor-page-controls span { margin-right: auto; font-weight: 700; }
+.editor-page-controls button { min-height: 30px; padding: 4px 8px; font-size: 12px; }
 .editor-board-header { min-height: 142px; padding-bottom: 5px; border-bottom: 3px solid #004b93; text-align: center; }
 .editor-board-header .board-header-top { width: calc(100% + 14mm); margin: -1.5mm -7mm 3px; display: block; }
 .editor-board-brand-image { display: block; width: 58.4%; height: 1.02in; object-fit: contain; object-position: left top; }
@@ -176,9 +181,9 @@ dialog::backdrop { background: #001b31cc; }
 .editor-cell.validated::after { content: "âœ“"; position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; color: #fff; background: #17833b; font-weight: 900; }
 .editor-cell img { width: 100%; height: 112px; padding: 0; object-fit: contain; object-position: center; }
 .editor-cell strong { text-align: center; }
-.cell-actions { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; gap: 4px; background: #ffffffed; }
+.cell-actions { position: absolute; inset: 0; display: none; flex-direction: column; align-items: stretch; justify-content: center; gap: 5px; padding: 8px; background: #ffffffed; }
 .editor-cell.selected .cell-actions { display: flex; }
-.cell-actions button { min-height: 30px; padding: 4px 7px; border-color: #789; font-size: 12px; }
+.cell-actions button { min-height: 30px; padding: 4px 7px; border-color: #789; font-size: 12px; width: 100%; }
 .empty-slot { display: grid; place-items: center; min-height: 120px; border: 2px dashed #9badbd; border-radius: 9px; color: #526879; background: #f7fafc; cursor: pointer; text-align: center; }
 .empty-slot.drag-target { border-color: #17833b; outline: 4px solid #17833b55; background: #eefaf4; }
 .editor-license { position: absolute; left: 9mm; right: 9mm; bottom: 3mm; padding-top: 4px; border-top: 1px solid #999; font-size: 4.5pt; line-height: 1.12; text-align: center; background: #fff; }
@@ -233,6 +238,8 @@ dialog::backdrop { background: #001b31cc; }
   body.print-editor #board-editor { display: block; position: static; width: auto; height: auto; margin: 0; overflow: visible; }
   body.print-editor .editor-shell, body.print-editor .editor-workspace { display: block; padding: 0; overflow: visible; background: #fff; }
   body.print-editor .editor-page { width: 8.5in; height: 11in; min-height: 11in; margin: 0; padding: 4.2mm 12mm 12mm; overflow: hidden; box-shadow: none; }
+  body.print-editor .editor-page-sequence { width: 8.5in; height: auto; min-height: auto; padding: 0; overflow: visible; display: block; }
+  body.print-editor .editor-page-sheet { width: 8.5in; height: 11in; min-height: 11in; margin: 0; padding: 4.2mm 12mm 12mm; overflow: hidden; box-shadow: none; break-after: page; page-break-after: always; }
   .cell-actions { display: none !important; }
   body.print-predefined > :not(#predefined-view), body.print-predefined #board-hierarchy > header, body.print-predefined .global-board-types, body.print-predefined .predefined-board-groups { display: none !important; }
   body.print-predefined #predefined-view, body.print-predefined #board-hierarchy, body.print-predefined .predefined-detail, body.print-predefined #predefined-detail-content { display: block !important; margin: 0; padding: 0; max-width: none; background: #fff; box-shadow: none; }
