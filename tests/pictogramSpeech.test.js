@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("incluye interruptor de audio junto a mostrar otros", async () => {
+test("incluye interruptor de audio global junto al botón buscar del encabezado", async () => {
   const html = await readFile("index.html", "utf8");
   const main = await readFile("src/main.js", "utf8");
   const speech = await readFile("src/pictogram-speech.js", "utf8");
@@ -10,8 +10,8 @@ test("incluye interruptor de audio junto a mostrar otros", async () => {
   assert.match(html, /id="speech-toggle-button"/);
   assert.match(html, /class="audio-toggle"/);
   assert.match(html, /gallery-title-row/);
-  assert.match(html, /<span>Audio<\/span><input id="speech-toggle-button" type="checkbox" role="switch"/);
-  assert.match(html, /id="refresh-gallery-button"[\s\S]*id="speech-toggle-button"/);
+  assert.match(html, /id="semantic-search"[\s\S]*aria-label="Buscar tableros">Buscar<\/button><label class="audio-toggle"[\s\S]*<span>Audio<\/span><input id="speech-toggle-button" type="checkbox" role="switch"/);
+  assert.doesNotMatch(html.match(/<form id="quick-search"[\s\S]*?<\/form>/)?.[0] || "", /speech-toggle-button/);
   assert.doesNotMatch(html, /Lectura: activada|Lectura: desactivada|aria-pressed="false"/);
   assert.doesNotMatch(html.match(/<div class="app-menu-panel">[\s\S]*?<\/div>/)?.[0] || "", /speech-toggle-button/);
   assert.match(main, /initPictogramSpeech/);

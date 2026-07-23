@@ -33,7 +33,7 @@
       </details>
       <form id="semantic-search" class="search-box" role="search">
         <label for="search-input">Búsqueda semántica o temática de tableros</label>
-        <div><input id="search-input" type="search" autocomplete="off" placeholder="Busca con palabras cotidianas: dolor de panza, temblor, necesito ayuda…"><button type="submit" aria-label="Buscar tableros">Buscar</button></div>
+        <div><input id="search-input" type="search" autocomplete="off" placeholder="Busca con palabras cotidianas: dolor de panza, temblor, necesito ayuda…"><button type="submit" aria-label="Buscar tableros">Buscar</button><label class="audio-toggle" for="speech-toggle-button"><span>Audio</span><input id="speech-toggle-button" type="checkbox" role="switch" aria-label="Habilitar audio de pictogramas"></label></div>
       </form>
       <span aria-hidden="true"></span>
       <nav id="header-theme-labels" class="header-theme-labels" aria-label="Grandes grupos de tableros"></nav>
@@ -54,7 +54,6 @@
         <button id="clear-quick-search" type="button">Borrar búsqueda</button>
         <span class="quick-search-separator" aria-hidden="true"></span>
         <button id="refresh-gallery-button" type="button">Mostrar otros</button>
-        <label class="audio-toggle" for="speech-toggle-button"><span>Audio</span><input id="speech-toggle-button" type="checkbox" role="switch" aria-label="Habilitar audio de pictogramas"></label>
       </form>
     </header>
     <div id="random-pictograms" class="random-pictograms"></div>

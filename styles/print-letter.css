@@ -21,7 +21,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible, [tabindex]:foc
 .app-menu-panel button { min-height: 29px; padding: 4px 7px; border: 1px solid #b7c6d3; font-size: 11px; text-align: left; }
 .search-box { position: relative; width: 100%; margin-top: 2px; }
 .search-box label { display: block; margin-bottom: 3px; font-weight: 700; font-size: 14px; }
-.search-box > div { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 8px; }
+.search-box > div { display: grid; grid-template-columns: minmax(0, 1fr) 88px 46px; gap: 8px; align-items: end; }
 .search-box input { flex: 1; min-width: 0; min-height: 40px; padding: 7px 12px; border: 2px solid #fff; border-radius: 7px; font: 16px Arial, sans-serif; }
 .institutional-heading > .search-box { grid-column: 2; grid-row: 2; align-self: end; margin-top: 0; }
 .header-menu { grid-column: 1; grid-row: 2; width: 42px; align-self: end; justify-self: center; }
@@ -106,9 +106,9 @@ input { font: inherit; }
 .initial-gallery h2 { color: #073b73; }
 .initial-gallery button { border-color: #087a88; }
 .initial-gallery #refresh-gallery-button { min-height: 38px; padding: 6px 9px; font-size: 12px; }
-.quick-search { width: min(920px, 100%); display: grid; grid-template-columns: minmax(220px, 1fr) auto auto 1px auto auto; gap: 6px; align-items: center; }
-.audio-toggle { min-height: 38px; padding: 5px 8px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #087a88; border-radius: 6px; color: #073b73; background: #fff; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
-.audio-toggle input { width: 34px; height: 18px; accent-color: #087a88; cursor: pointer; }
+.quick-search { width: min(920px, 100%); display: grid; grid-template-columns: minmax(220px, 1fr) auto auto 1px auto; gap: 6px; align-items: center; }
+.audio-toggle { min-height: 40px; padding: 3px 6px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px solid #fff; border-radius: 7px; color: #073b73; background: #fff; font-size: 10px; line-height: 1; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.audio-toggle input { width: 18px; height: 18px; margin: 0; accent-color: #087a88; cursor: pointer; }
 .quick-search-separator { width: 1px; height: 28px; margin: 0 4px; background: #9eb1c0; }
 .quick-search label { grid-column: 1 / -1; color: #073b73; font-size: 13px; font-weight: 700; }
 .quick-search input { min-height: 38px; padding: 7px 10px; border: 1px solid #8ba4b8; border-radius: 6px; }
@@ -254,7 +254,7 @@ dialog::backdrop { background: #001b31cc; }
 @media screen and (max-width: 850px) {
   .page { width: 100%; height: auto; min-height: 11in; margin: 8px 0; }
   .app-header { padding: 9px 12px; }
-  .search-box > div { grid-template-columns: minmax(0, 1fr) 74px; }
+  .search-box > div { grid-template-columns: minmax(0, 1fr) 74px 42px; }
   .search-box input { width: 100%; }
   .institutional-heading { grid-template-columns: 62px minmax(0, 1fr); gap: 5px 9px; }
   .logo-slot { width: 58px; height: 72px; }
@@ -295,9 +295,11 @@ dialog::backdrop { background: #001b31cc; }
   .brand span small { margin-left: 3px; font-size: .78em; }
   .search-box { width: 100%; min-width: 0; max-width: 100%; }
   .search-box label { font-size: 11px; }
-  .search-box > div { width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 58px; gap: 5px; }
+  .search-box > div { width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 58px 38px; gap: 5px; }
   .search-box input { width: 100%; min-width: 0; max-width: 100%; min-height: 34px; padding: 5px 8px; font-size: 13px; }
   .search-box > div button { width: 100%; min-width: 0; max-width: 100%; min-height: 32px; padding: 4px 5px; font-size: 9px; }
+  .search-box .audio-toggle { width: 38px; min-width: 38px; min-height: 32px; padding: 2px; font-size: 8px; }
+  .search-box .audio-toggle input { width: 15px; height: 15px; }
   .global-board-types { grid-template-columns: 1fr 1fr; }
   .global-board-types button { min-height: 34px; padding: 4px; font-size: 8px; }
   .board-hierarchy, .initial-gallery, .semantic-summary { width: calc(100% - 16px); margin: 10px 8px; padding: 12px; }
@@ -318,13 +320,11 @@ dialog::backdrop { background: #001b31cc; }
   .header-menu .app-menu-panel { left: 0; right: auto; top: calc(100% + 4px); }
   .app-menu-panel button { min-height: 30px; padding: 4px 6px; font-size: 9px; }
   .quick-search { gap: 4px; }
-  .quick-search { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+  .quick-search { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
   .quick-search input { grid-column: 1 / -1; width: 100%; }
-  .quick-search button, .initial-gallery #refresh-gallery-button, .audio-toggle { width: 100%; min-width: 0; }
+  .quick-search button, .initial-gallery #refresh-gallery-button { width: 100%; min-width: 0; }
   .quick-search input { min-height: 32px; padding: 5px 7px; font-size: 12px; }
-  .quick-search button, .initial-gallery #refresh-gallery-button, .audio-toggle { min-height: 32px; padding: 4px 6px; font-size: 9px; }
-  .audio-toggle { justify-content: center; gap: 4px; }
-  .audio-toggle input { width: 26px; height: 15px; }
+  .quick-search button, .initial-gallery #refresh-gallery-button { min-height: 32px; padding: 4px 6px; font-size: 9px; }
   .quick-search-separator { display: none; }
   .subboard-actions { gap: 4px; }
   .subboard-actions button { min-height: 30px; padding: 3px 6px; font-size: 8px; }
