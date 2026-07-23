@@ -10,7 +10,7 @@ test("incluye interruptor de audio global junto al botón buscar del encabezado"
   assert.match(html, /id="speech-toggle-button"/);
   assert.match(html, /class="audio-toggle"/);
   assert.match(html, /gallery-title-row/);
-  assert.match(html, /id="semantic-search"[\s\S]*aria-label="Buscar tableros">Buscar<\/button><label class="audio-toggle"[\s\S]*<span>Audio<\/span><input id="speech-toggle-button" type="checkbox" role="switch"/);
+  assert.match(html, /id="semantic-search"[\s\S]*aria-label="Buscar tableros">Buscar<\/button><label class="audio-toggle"[\s\S]*<span class="audio-toggle-label">Audio<\/span><input id="speech-toggle-button" type="checkbox" role="switch"[\s\S]*<span class="audio-switch"/);
   assert.doesNotMatch(html.match(/<form id="quick-search"[\s\S]*?<\/form>/)?.[0] || "", /speech-toggle-button/);
   assert.doesNotMatch(html, /Lectura: activada|Lectura: desactivada|aria-pressed="false"/);
   assert.doesNotMatch(html.match(/<div class="app-menu-panel">[\s\S]*?<\/div>/)?.[0] || "", /speech-toggle-button/);
