@@ -130,11 +130,11 @@ async function handleApi(request, response, path) {
     if (!board || typeof board !== "object") return send(400, { error: "El tablero editable no es válido." });
     await mkdir(savedDirectory, { recursive: true });
     const baseName = safeFileName(board.title || "tablero");
-    let filename = `${baseName}.json`;
+    let filename = `${baseName}.PICTIMS`;
     let destination = join(savedDirectory, filename);
     if (existsSync(destination)) {
       const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-      filename = `${baseName}-${stamp}.json`;
+      filename = `${baseName}-${stamp}.PICTIMS`;
       destination = join(savedDirectory, filename);
     }
     await writeFile(destination, JSON.stringify({ ...board, savedAt: new Date().toISOString() }, null, 2), "utf8");
@@ -150,7 +150,7 @@ async function handleApi(request, response, path) {
   }
   if (request.method === "POST" && path === "/api/native-dialog/open") {
     await mkdir(savedDirectory, { recursive: true });
-    const selected = await nativeDialog("open", savedDirectory, "tablero.json", "Tablero editable JSON (*.json)|*.json");
+    const selected = await nativeDialog("open", savedDirectory, "tablero.PICTIMS", "Archivo de tablero de pictogramas IMSS (*.PICTIMS)|*.PICTIMS");
     if (!selected) return send(200, { cancelled: true });
     return send(200, { ok: true, filename: selected, content: await readFile(selected, "utf8") });
   }
@@ -191,7 +191,7 @@ function uniqueSavedFilename(directory, baseName, extension) {
   if (!existsSync(join(directory, filename))) return filename;
   return `${baseName}-${new Date().toISOString().replace(/[:.]/g, "-")}.${extension}`;
 }
-async function nativeDialog(mode, initialDirectory, suggestedName = "tablero.json", filter = "Todos los archivos (*.*)|*.*") {
+async function nativeDialog(mode, initialDirectory, suggestedName = "tablero.PICTIMS", filter = "Todos los archivos (*.*)|*.*") {
   const { stdout } = await execFileAsync("powershell.exe", [
     "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass",
     "-File", join(root, "scripts", "native-dialog.ps1"),

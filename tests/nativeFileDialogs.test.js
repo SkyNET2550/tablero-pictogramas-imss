@@ -13,6 +13,8 @@ test("exportar, guardar y abrir usan cuadros nativos en local y descarga del nav
   assert.match(source, /showSaveFilePicker/);
   assert.match(source, /link\.download = suggestedName/);
   assert.match(source, /safeName\(board\.title\)/);
+  assert.match(source, /\.PICTIMS/);
+  assert.match(source, /application\/x-pictims\+json/);
   assert.doesNotMatch(source, /startIn:.*"documents"/);
 });
 
@@ -22,4 +24,16 @@ test("cancelar el guardado del navegador no se trata como error", async () => {
   assert.match(source, /error\?\.name === "AbortError"/);
   assert.match(source, /if \(isSaveCancelled\(error\)\) return false/);
   assert.match(source, /if \(isSaveCancelled\(error\)\) return;/);
+});
+
+test("PICTIMS queda reservado para tableros editables, no para exportaciones", async () => {
+  const html = await readFile("index.html", "utf8");
+  const source = await readFile("src/board-editor.js", "utf8");
+
+  assert.match(html, /accept="\.PICTIMS,\.pictims,application\/x-pictims\+json"/);
+  assert.match(source, /tablero\.PICTIMS/);
+  assert.match(source, /`\$\{safeName\(board\.title\)\}\.PICTIMS`/);
+  assert.match(source, /Archivo de tablero de pictogramas IMSS/);
+  assert.match(source, /`\$\{safeName\(board\.title\)\}\.\$\{format\}`/);
+  assert.doesNotMatch(source, /exportBinary\("PICTIMS"\)|export-pictims-button/i);
 });

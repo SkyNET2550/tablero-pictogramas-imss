@@ -622,7 +622,7 @@ async function openEditableBoardDialog() {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || `Error ${response.status}`);
     if (result.cancelled) return;
-    const file = new File([result.content], result.filename || "tablero.json", { type: "application/json" });
+    const file = new File([result.content], result.filename || "tablero.PICTIMS", { type: "application/x-pictims+json" });
     await importEditableFile(file);
   } catch (error) {
     alert(`No se pudo abrir el tablero: ${error.message}`);
@@ -651,9 +651,9 @@ async function saveCurrentEditableBoard() {
   const board = activeBoard();
   try {
     const saved = await saveWithNativeDialog(
-      new Blob([JSON.stringify({ ...board, savedAt: new Date().toISOString() }, null, 2)], { type: "application/json;charset=utf-8" }),
-      `${safeName(board.title)}.json`,
-      [{ description: "Tablero editable JSON", accept: { "application/json": [".json"] } }]
+      new Blob([JSON.stringify({ ...board, savedAt: new Date().toISOString() }, null, 2)], { type: "application/x-pictims+json;charset=utf-8" }),
+      `${safeName(board.title)}.PICTIMS`,
+      [{ description: "Archivo de tablero de pictogramas IMSS", accept: { "application/x-pictims+json": [".PICTIMS"] } }]
     );
     if (saved) markSemanticDraftSaved();
     return saved;
