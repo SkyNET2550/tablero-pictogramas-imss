@@ -15,7 +15,7 @@ Publicar el generador de tableros de comunicación alternativa por pictogramas p
 
 1. Entrar a https://github.com/new
 2. Crear un repositorio nuevo, por ejemplo:
-   - Nombre: `tablerio-pictogramas-imss`
+   - Nombre: `tablero-pictogramas-imss`
    - Visibilidad: privada o pública, según convenga institucionalmente.
 3. No inicializar con README, `.gitignore` o licencia, porque el proyecto ya los contiene.
 
@@ -28,12 +28,12 @@ En una terminal dentro de:
 ejecutar:
 
 ```powershell
-git remote add origin https://github.com/USUARIO/TABLERIO-PICTOGRAMAS-IMSS.git
+git remote add origin https://github.com/USUARIO/tablero-pictogramas-imss.git
 git branch -M main
 git push -u origin main
 ```
 
-Sustituir `USUARIO/TABLERIO-PICTOGRAMAS-IMSS` por la ruta real del repositorio.
+Sustituir `USUARIO/tablero-pictogramas-imss` por la ruta real del repositorio.
 
 ## Paso 3. Publicar en Vercel
 
