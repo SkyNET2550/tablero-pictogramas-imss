@@ -15,3 +15,11 @@ test("exportar, guardar y abrir usan cuadros nativos en local y descarga del nav
   assert.match(source, /safeName\(board\.title\)/);
   assert.doesNotMatch(source, /startIn:.*"documents"/);
 });
+
+test("cancelar el guardado del navegador no se trata como error", async () => {
+  const source = await readFile("src/board-editor.js", "utf8");
+  assert.match(source, /function isSaveCancelled\(error\)/);
+  assert.match(source, /error\?\.name === "AbortError"/);
+  assert.match(source, /if \(isSaveCancelled\(error\)\) return false/);
+  assert.match(source, /if \(isSaveCancelled\(error\)\) return;/);
+});

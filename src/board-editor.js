@@ -658,6 +658,7 @@ async function saveCurrentEditableBoard() {
     if (saved) markSemanticDraftSaved();
     return saved;
   } catch (error) {
+    if (isSaveCancelled(error)) return false;
     alert(`No se pudo guardar el tablero: ${error.message}`);
     return false;
   }
@@ -684,6 +685,7 @@ async function exportBinary(format) {
         : format === "pdf" ? { "application/pdf": [".pdf"] } : { "image/png": [".png"] }
     }]);
   } catch (error) {
+    if (isSaveCancelled(error)) return;
     alert(`No se pudo exportar: ${error.message}`);
   } finally {
     button.disabled = false;
@@ -716,7 +718,7 @@ footer{position:absolute;left:12mm;right:12mm;bottom:5mm;padding-top:4px;border-
       [{ description: "Documento HTML", accept: { "text/html": [".html"] } }]
     );
   } catch (error) {
-    if (error.name !== "AbortError") alert(`No se pudo exportar: ${error.message}`);
+    if (!isSaveCancelled(error)) alert(`No se pudo exportar: ${error.message}`);
   }
 }
 
@@ -750,7 +752,13 @@ function usesNativeDialogs() {
 
 async function saveWithBrowser(blob, suggestedName, types) {
   if ("showSaveFilePicker" in window) {
-    const handle = await window.showSaveFilePicker({ suggestedName, types });
+    let handle;
+    try {
+      handle = await window.showSaveFilePicker({ suggestedName, types });
+    } catch (error) {
+      if (isSaveCancelled(error)) return false;
+      throw error;
+    }
     const writable = await handle.createWritable();
     await writable.write(blob);
     await writable.close();
@@ -765,6 +773,10 @@ async function saveWithBrowser(blob, suggestedName, types) {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return true;
+}
+
+function isSaveCancelled(error) {
+  return error?.name === "AbortError" || /aborted a request|cancel/i.test(error?.message || "");
 }
 
 function windowsFileFilter(types, suggestedName) {
