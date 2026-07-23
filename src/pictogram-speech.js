@@ -5,13 +5,13 @@ let lastSpoken = "";
 let lastSpokenAt = 0;
 
 export function initPictogramSpeech() {
-  const button = document.querySelector("#speech-toggle-button");
-  updateButton(button);
-  button?.addEventListener("click", () => {
-    enabled = !enabled;
+  const toggle = document.querySelector("#speech-toggle-button");
+  updateToggle(toggle);
+  toggle?.addEventListener("change", () => {
+    enabled = toggle.checked;
     localStorage.setItem(STORAGE_KEY, String(enabled));
     if (!enabled) window.speechSynthesis?.cancel();
-    updateButton(button);
+    updateToggle(toggle);
   });
 
   document.addEventListener("mouseover", event => {
@@ -32,10 +32,10 @@ export function initPictogramSpeech() {
   });
 }
 
-function updateButton(button) {
-  if (!button) return;
-  button.setAttribute("aria-pressed", String(enabled));
-  button.textContent = enabled ? "Lectura: activada" : "Lectura: desactivada";
+function updateToggle(toggle) {
+  if (!toggle) return;
+  toggle.checked = enabled;
+  toggle.setAttribute("aria-checked", String(enabled));
 }
 
 function speakCard(card, force = false) {

@@ -10,7 +10,8 @@ test("la interfaz móvil aplica botones compactos a todas las áreas", async () 
   assert.match(mobile, /\.header-menu \.app-menu-panel\s*\{[^}]*left:\s*0;\s*right:\s*auto/s);
   assert.match(mobile, /\.header-theme-label\s*\{[^}]*width:\s*100%/s);
   assert.match(mobile, /\.quick-search button/);
-  assert.match(mobile, /\.quick-search\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);\s*width:\s*100%/s);
+  assert.match(mobile, /\.quick-search\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);\s*width:\s*100%/s);
+  assert.match(mobile, /\.audio-toggle\s*\{[^}]*justify-content:\s*center/s);
   assert.match(mobile, /\.quick-search input\s*\{\s*grid-column:\s*1\s*\/\s*-1;\s*width:\s*100%/s);
   assert.match(mobile, /\.sidebar-actions button/);
   assert.doesNotMatch(mobile, /\.predefined-detail-navigation button/);

@@ -46,7 +46,7 @@
   <main id="main-content" class="home-view">
   <section id="initial-gallery" class="initial-gallery no-print" aria-labelledby="gallery-title">
     <header>
-      <div class="gallery-title-row"><h2 id="gallery-title">Acervo de pictogramas</h2><button id="speech-toggle-button" class="speech-toggle-button" type="button" aria-pressed="false">?? Lectura: desactivada</button></div>
+      <div class="gallery-title-row"><h2 id="gallery-title">Acervo de pictogramas</h2></div>
       <form id="quick-search" class="quick-search" role="search">
         <label for="quick-search-input" class="visually-hidden">Búsqueda rápida de pictogramas por texto o título</label>
         <input id="quick-search-input" type="search" placeholder="Buscar pictogramas por texto o título" autocomplete="off">
@@ -54,6 +54,7 @@
         <button id="clear-quick-search" type="button">Borrar búsqueda</button>
         <span class="quick-search-separator" aria-hidden="true"></span>
         <button id="refresh-gallery-button" type="button">Mostrar otros</button>
+        <label class="audio-toggle" for="speech-toggle-button"><span>Audio</span><input id="speech-toggle-button" type="checkbox" role="switch" aria-label="Habilitar audio de pictogramas"></label>
       </form>
     </header>
     <div id="random-pictograms" class="random-pictograms"></div>
