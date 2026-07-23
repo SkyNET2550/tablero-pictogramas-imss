@@ -18,10 +18,17 @@ let draggedIndex = null;
 let selectedPickerId = null;
 let selectedPickerImage = null;
 let externalSelection = null;
+let semanticDraftDirty = false;
+const semanticDraftSnapshots = new Map();
 
 export function initBoardEditor() {
   document.querySelector("#open-editor-button").addEventListener("click", () => { render(); editor.showModal(); });
-  document.querySelector("#close-editor-button").addEventListener("click", () => editor.close());
+  document.querySelector("#close-editor-button").addEventListener("click", requestEditorClose);
+  editor.addEventListener("cancel", event => {
+    if (!semanticDraftDirty) return;
+    event.preventDefault();
+    requestEditorClose();
+  });
   document.querySelector("#new-board-button").addEventListener("click", createBoard);
   document.querySelector("#duplicate-board-button").addEventListener("click", duplicateBoard);
   document.querySelector("#delete-board-button").addEventListener("click", deleteBoard);
@@ -30,6 +37,7 @@ export function initBoardEditor() {
   document.querySelector("#export-pdf-button").addEventListener("click", () => exportBinary("pdf"));
   document.querySelector("#export-docx-button").addEventListener("click", () => exportBinary("docx"));
   document.querySelector("#export-image-button").addEventListener("click", () => exportBinary("png"));
+  document.querySelector("#save-editable-button").addEventListener("click", saveCurrentEditableBoard);
   document.querySelector("#open-editable-button").addEventListener("click", openEditableBoardDialog);
   document.querySelector("#open-editable-input").addEventListener("change", openEditableBoard);
   document.querySelector("#picker-search").addEventListener("submit", searchPicker);
@@ -120,7 +128,15 @@ function deleteBoard() {
 }
 function updateProperties() {
   const board = activeBoard();
-  board.title = titleInput.value || "Sin título";
+  const nextTitle = titleInput.value || "Sin título";
+  const rootId = board.semanticRootId || board.semanticParentId || board.id;
+  if (board.semanticRootId || board.semanticParentId) {
+    boards
+      .filter(item => (item.semanticRootId || item.semanticParentId || item.id) === rootId)
+      .forEach(item => { item.title = nextTitle; });
+  } else {
+    board.title = nextTitle;
+  }
   save(); renderPage(); renderList();
 }
 
@@ -166,18 +182,30 @@ async function addSemanticGroupToEditor(event) {
     return;
   }
   const base = activeBoard();
+  rememberDraftState(base);
+  const sharedTitle = sentenceCase(titleInput.value || base.title || "Mi tablero");
+  base.title = sharedTitle;
+  base.semanticRootId = base.semanticRootId || base.id;
+  base.semanticGenerated = true;
   for (let index = 0; index < unique.length; index += 16) {
     const cells = unique.slice(index, index + 16);
     const target = index === 0 ? base : {
       id: uid(),
-      title: `${base.title} · Página ${Math.floor(index / 16) + 1}`,
+      title: sharedTitle,
       semanticParentId: base.id,
+      semanticRootId: base.semanticRootId,
+      semanticGenerated: true,
+      semanticPage: Math.floor(index / 16) + 1,
       cells: Array(16).fill(null)
     };
     target.cells = [...cells, ...Array(Math.max(0, 16 - cells.length)).fill(null)];
-    if (index > 0) boards.push(target);
+    if (index > 0) {
+      rememberNewDraft(target.id);
+      boards.push(target);
+    }
   }
   activeId = base.id;
+  semanticDraftDirty = true;
   save();
   semanticDialog.close();
   render();
@@ -442,6 +470,55 @@ function choosePictogram(selection) {
   } else activeBoard().cells[replaceIndex] = cell;
   save(); renderPage(); picker.close();
 }
+async function requestEditorClose() {
+  if (!semanticDraftDirty) {
+    editor.close();
+    return;
+  }
+  const saveBeforeClose = confirm("Hay tableros creados desde un grupo semántico que no se han guardado. Acepta para guardar antes de salir. Cancela para salir sin guardar y eliminar esos cambios.");
+  if (saveBeforeClose) {
+    const saved = await saveCurrentEditableBoard();
+    if (!saved) return;
+    markSemanticDraftSaved();
+  } else {
+    discardSemanticDraft();
+  }
+  editor.close();
+}
+
+function rememberDraftState(board) {
+  if (!semanticDraftSnapshots.has(board.id)) semanticDraftSnapshots.set(board.id, structuredClone(board));
+}
+
+function rememberNewDraft(id) {
+  if (!semanticDraftSnapshots.has(id)) semanticDraftSnapshots.set(id, null);
+}
+
+function markSemanticDraftSaved() {
+  semanticDraftDirty = false;
+  semanticDraftSnapshots.clear();
+  boards.forEach(board => { if (board.semanticGenerated) board.saved = true; });
+  save();
+  render();
+}
+
+function discardSemanticDraft() {
+  for (const [id, snapshot] of semanticDraftSnapshots.entries()) {
+    const index = boards.findIndex(board => board.id === id);
+    if (snapshot === null) {
+      if (index >= 0) boards.splice(index, 1);
+    } else if (index >= 0) {
+      boards[index] = snapshot;
+    }
+  }
+  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", cells: Array(16).fill(null) }];
+  activeId = boards[0].id;
+  semanticDraftDirty = false;
+  semanticDraftSnapshots.clear();
+  save();
+  render();
+}
+
 function printBoard() {
   const previousTitle = document.title;
   document.title = activeBoard().title;
@@ -480,6 +557,22 @@ async function importEditableFile(file) {
     alert("La copia editable no contiene un tablero válido.");
   }
 }
+async function saveCurrentEditableBoard() {
+  const board = activeBoard();
+  try {
+    const saved = await saveWithNativeDialog(
+      new Blob([JSON.stringify({ ...board, savedAt: new Date().toISOString() }, null, 2)], { type: "application/json;charset=utf-8" }),
+      `${safeName(board.title)}.json`,
+      [{ description: "Tablero editable JSON", accept: { "application/json": [".json"] } }]
+    );
+    if (saved) markSemanticDraftSaved();
+    return saved;
+  } catch (error) {
+    alert(`No se pudo guardar el tablero: ${error.message}`);
+    return false;
+  }
+}
+
 async function exportBinary(format) {
   const board = activeBoard();
   const button = document.querySelector(`#export-${format}-button`);
