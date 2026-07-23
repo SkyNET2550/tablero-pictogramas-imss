@@ -1,0 +1,14 @@
+{
+  "dolor": ["malestar", "molestia", "me duele", "síntoma", "dolencia", "dolor de panza", "dolor de barriga", "dolor de estómago"],
+  "ayuda": ["auxilio", "apoyo", "asistencia", "necesito ayuda", "socorro"],
+  "médico": ["doctor", "consulta", "atención médica", "personal médico"],
+  "enfermera": ["enfermero", "personal de enfermería", "cuidados"],
+  "hospital": ["clínica", "unidad médica", "centro de salud", "consultorio"],
+  "baño": ["sanitario", "wc", "retrete", "servicio"],
+  "comida": ["alimento", "hambre", "comer", "alimentación"],
+  "agua": ["beber", "sed", "tomar agua", "líquido"],
+  "emergencia": ["urgencia", "auxilio", "riesgo", "atención inmediata"],
+  "respirar": ["aire", "falta de aire", "no puedo respirar", "dificultad respiratoria"],
+  "cita": ["consulta", "agenda", "turno", "programación"],
+  "documento": ["papel", "identificación", "formato", "expediente"]
+}

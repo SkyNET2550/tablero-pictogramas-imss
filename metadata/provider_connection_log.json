@@ -1,0 +1,122 @@
+[
+  {
+    "id": "arasaac",
+    "name": "ARASAAC",
+    "enabled": true,
+    "authLabel": "No requerida",
+    "status": "connected",
+    "message": "Servicio disponible",
+    "checkedAt": "2026-06-19T03:40:27.225Z",
+    "responseTimeMs": 731
+  },
+  {
+    "id": "opensymbols",
+    "name": "OpenSymbols",
+    "enabled": true,
+    "authLabel": "Token/shared secret",
+    "status": "auth_required",
+    "message": "Faltan credenciales",
+    "checkedAt": "2026-06-19T03:40:27.226Z",
+    "responseTimeMs": 0
+  },
+  {
+    "id": "globalsymbols",
+    "name": "Global Symbols",
+    "enabled": true,
+    "authLabel": "API key",
+    "status": "auth_required",
+    "message": "Falta API key",
+    "checkedAt": "2026-06-19T03:40:27.226Z",
+    "responseTimeMs": 0
+  },
+  {
+    "id": "symbotalk",
+    "name": "SymboTalk",
+    "enabled": true,
+    "authLabel": "No requerida",
+    "status": "auth_error",
+    "message": "HTTP 403",
+    "checkedAt": "2026-06-19T03:40:27.536Z",
+    "responseTimeMs": 310
+  },
+  {
+    "id": "globalsymbols",
+    "name": "Global Symbols",
+    "enabled": true,
+    "authLabel": "API key",
+    "status": "auth_required",
+    "message": "Falta API key",
+    "checkedAt": "2026-06-19T03:55:20.855Z",
+    "responseTimeMs": 0
+  },
+  {
+    "id": "globalsymbols",
+    "name": "Global Symbols",
+    "enabled": true,
+    "authLabel": "API key",
+    "status": "auth_required",
+    "message": "Falta API key",
+    "checkedAt": "2026-06-19T03:55:22.286Z",
+    "responseTimeMs": 0
+  },
+  {
+    "id": "globalsymbols",
+    "name": "Global Symbols",
+    "enabled": true,
+    "authLabel": "API key",
+    "status": "auth_required",
+    "message": "Falta API key",
+    "checkedAt": "2026-06-19T04:00:13.672Z",
+    "responseTimeMs": 0
+  },
+  {
+    "id": "globalsymbols",
+    "name": "Global Symbols",
+    "enabled": true,
+    "authLabel": "API key",
+    "status": "auth_required",
+    "message": "Falta API key",
+    "checkedAt": "2026-06-19T04:00:22.908Z",
+    "responseTimeMs": 0
+  },
+  {
+    "id": "opensymbols",
+    "name": "OpenSymbols",
+    "enabled": true,
+    "authLabel": "Token/shared secret",
+    "status": "auth_required",
+    "message": "Faltan credenciales",
+    "checkedAt": "2026-06-19T04:57:32.956Z",
+    "responseTimeMs": 0
+  },
+  {
+    "id": "globalsymbols",
+    "name": "Global Symbols",
+    "enabled": true,
+    "authLabel": "API key",
+    "status": "auth_required",
+    "message": "Falta API key",
+    "checkedAt": "2026-06-19T04:57:34.910Z",
+    "responseTimeMs": 0
+  },
+  {
+    "id": "symbotalk",
+    "name": "SymboTalk",
+    "enabled": true,
+    "authLabel": "No requerida",
+    "status": "auth_error",
+    "message": "HTTP 403",
+    "checkedAt": "2026-06-19T04:57:37.255Z",
+    "responseTimeMs": 322
+  },
+  {
+    "id": "globalsymbols",
+    "name": "Global Symbols",
+    "enabled": true,
+    "authLabel": "API key",
+    "status": "auth_required",
+    "message": "Falta API key",
+    "checkedAt": "2026-06-23T00:33:45.523Z",
+    "responseTimeMs": 0
+  }
+]

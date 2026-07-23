@@ -1,0 +1,42 @@
+{
+  "arasaac": {
+    "id": "arasaac",
+    "name": "ARASAAC",
+    "enabled": true,
+    "authLabel": "No requerida",
+    "status": "connected",
+    "message": "No requiere credenciales",
+    "checkedAt": "2026-06-19T20:06:07.650Z",
+    "responseTimeMs": 731
+  },
+  "opensymbols": {
+    "id": "opensymbols",
+    "name": "OpenSymbols",
+    "enabled": true,
+    "authLabel": "Token/shared secret",
+    "status": "auth_required",
+    "message": "Faltan credenciales",
+    "checkedAt": "2026-06-19T04:57:32.956Z",
+    "responseTimeMs": 0
+  },
+  "globalsymbols": {
+    "id": "globalsymbols",
+    "name": "Global Symbols",
+    "enabled": true,
+    "authLabel": "API key",
+    "status": "auth_required",
+    "message": "Falta API key",
+    "checkedAt": "2026-06-23T00:33:45.523Z",
+    "responseTimeMs": 0
+  },
+  "symbotalk": {
+    "id": "symbotalk",
+    "name": "SymboTalk",
+    "enabled": true,
+    "authLabel": "No requerida",
+    "status": "auth_error",
+    "message": "HTTP 403",
+    "checkedAt": "2026-06-19T04:57:37.255Z",
+    "responseTimeMs": 322
+  }
+}

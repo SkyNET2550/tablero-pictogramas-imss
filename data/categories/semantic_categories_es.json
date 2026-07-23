@@ -1,0 +1,9 @@
+{
+  "comunicacion_basica": {"label": "Comunicación básica", "terms": ["sí", "no", "hola", "adiós", "ayuda", "quiero", "gracias", "no entiendo", "repetir", "esperar"]},
+  "atencion_medica": {"label": "Atención médica", "terms": ["médico", "enfermera", "hospital", "medicina", "dolor", "fiebre", "tos", "náusea", "alergia", "respirar"]},
+  "urgencias": {"label": "Urgencias", "terms": ["emergencia", "ambulancia", "dolor fuerte", "no puedo respirar", "ayuda", "riesgo"]},
+  "orientacion_institucional": {"label": "Orientación institucional", "terms": ["recepción", "módulo", "cita", "documento", "turno", "firma", "esperar", "fila", "consultorio"]},
+  "higiene_cuidado": {"label": "Higiene y cuidado", "terms": ["baño", "lavarse", "pañal", "cambio de ropa", "aseo", "ayuda"]},
+  "alimentacion": {"label": "Alimentación", "terms": ["agua", "comida", "hambre", "sed", "beber", "comer", "náusea"]},
+  "emociones": {"label": "Emociones", "terms": ["miedo", "tristeza", "enojo", "calma", "dolor", "preocupación", "feliz"]}
+}

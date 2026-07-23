@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tableros institucionales de comunicación</title>
+  <link rel="stylesheet" href="./styles/print-letter.css">
+</head>
+<body>
+  <a class="skip-link" href="#initial-gallery">Saltar al contenido principal</a>
+  <header class="app-header no-print">
+    <div class="institutional-heading">
+      <button id="logo-upload-button" class="logo-slot" type="button" title="Volver al inicio" aria-label="Volver al inicio">
+        <img id="app-logo" src="./assets/institutional/logotipo-imss-blanco.svg" alt="Logotipo del Instituto Mexicano del Seguro Social">
+        <span id="logo-placeholder" hidden>LOGOTIPO<br>INSTITUCIONAL</span>
+      </button>
+      <input id="logo-file-input" type="file" accept="image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg" hidden>
+      <div class="header-content">
+        <div class="brand">
+          <strong>Instituto Mexicano del Seguro Social</strong>
+          <span>GENERADOR DE TABLEROS DE COMUNICACIÓN ALTERNATIVA POR PICTOGRAMAS <small>V. 1.0</small></span>
+        </div>
+      </div>
+      <details class="app-menu header-menu">
+        <summary title="Menú" aria-label="Abrir menú de acciones"><span aria-hidden="true">☰</span></summary>
+        <div class="app-menu-panel">
+          <button id="menu-home-button" type="button">Inicio</button>
+          <button id="open-editor-button" type="button">Construir tablero</button>
+          <button id="thematic-boards-button" type="button">Tableros temáticos</button>
+          <button id="predefined-boards-button" type="button">Tableros predefinidos</button>
+          <button id="api-services-button" type="button">Servicios API</button>
+        </div>
+      </details>
+      <form id="semantic-search" class="search-box" role="search">
+        <label for="search-input">Búsqueda semántica o temática de tableros</label>
+        <div><input id="search-input" type="search" autocomplete="off" placeholder="Busca con palabras cotidianas: dolor de panza, temblor, necesito ayuda…"><button type="submit" aria-label="Buscar tableros">Buscar</button></div>
+      </form>
+      <span aria-hidden="true"></span>
+      <nav id="header-theme-labels" class="header-theme-labels" aria-label="Grandes grupos de tableros"></nav>
+    </div>
+    <div class="header-actions">
+      <span id="status" class="visually-hidden" role="status" aria-live="polite"></span>
+    </div>
+  </header>
+  <section id="semantic-summary" class="semantic-summary home-view no-print" hidden></section>
+  <main id="main-content" class="home-view">
+  <section id="initial-gallery" class="initial-gallery no-print" aria-labelledby="gallery-title">
+    <header>
+      <h2 id="gallery-title">Acervo de pictogramas</h2>
+      <form id="quick-search" class="quick-search" role="search">
+        <label for="quick-search-input" class="visually-hidden">Búsqueda rápida de pictogramas por texto o título</label>
+        <input id="quick-search-input" type="search" placeholder="Buscar pictogramas por texto o título" autocomplete="off">
+        <button type="submit">Buscar</button>
+        <button id="clear-quick-search" type="button">Borrar búsqueda</button>
+        <span class="quick-search-separator" aria-hidden="true"></span>
+        <button id="refresh-gallery-button" type="button">Mostrar otros</button>
+      </form>
+    </header>
+    <div id="random-pictograms" class="random-pictograms"></div>
+  </section>
+  <div id="boards-container" aria-live="polite"></div>
+  </main>
+  <main id="predefined-view" class="predefined-view no-print" hidden>
+  <section id="board-hierarchy" class="board-hierarchy" aria-labelledby="hierarchy-title">
+    <header class="hierarchy-toolbar">
+      <div class="hierarchy-heading">
+        <h2 id="hierarchy-title">Tableros predefinidos</h2>
+        <p id="hierarchy-selection-title">Temáticas y tableros institucionales editables.</p>
+      </div>
+      <div id="hierarchy-board-actions" class="hierarchy-board-actions no-print" hidden>
+        <button id="hierarchy-back-button" class="hierarchy-back-button" type="button" title="Regresar" aria-label="Regresar a la lista de tableros">↶</button>
+        <button id="hierarchy-add-group-button" type="button">Agregar grupo temático</button>
+        <button id="hierarchy-add-pictogram-button" type="button">Agregar pictograma</button>
+        <button id="hierarchy-print-button" type="button">Imprimir tablero</button>
+      </div>
+    </header>
+    <nav id="global-board-types" class="global-board-types" aria-label="Temáticas globales de tableros"></nav>
+    <div id="predefined-board-groups" class="predefined-board-groups"></div>
+    <section id="predefined-detail" class="predefined-detail" aria-live="polite" hidden>
+      <div id="predefined-detail-content"></div>
+    </section>
+  </section>
+  </main>
+  <dialog id="board-editor" class="editor-dialog">
+    <div class="editor-shell">
+      <header class="editor-header">
+        <div><h2>Constructor de tableros</h2><p>Crea páginas carta y organiza cada pictograma.</p></div>
+        <button id="close-editor-button" type="button" aria-label="Cerrar editor">Cerrar</button>
+      </header>
+      <aside class="editor-sidebar">
+        <button id="new-board-button" type="button">+ Nuevo tablero</button>
+        <div id="board-list" class="board-list"></div>
+        <section class="sidebar-actions" aria-label="Acciones del tablero">
+          <h3>Acciones</h3>
+          <button id="export-pdf-button" type="button">Exportar PDF</button>
+          <button id="export-image-button" type="button">Exportar imagen</button>
+          <button id="export-docx-button" type="button">Exportar DOCX editable</button>
+          <button id="open-editable-button" type="button">Abrir tablero editable</button>
+          <input id="open-editable-input" type="file" accept="application/json,.json" hidden>
+          <button id="print-current-button" type="button">Imprimir tablero</button>
+        </section>
+        <button id="duplicate-board-button" type="button">Duplicar tablero</button>
+        <button id="delete-board-button" class="danger" type="button">Eliminar tablero</button>
+      </aside>
+      <main class="editor-workspace">
+        <div class="editor-properties">
+          <label>Título <input id="editor-title" maxlength="70"></label>
+          <button id="editor-add-semantic-group" type="button">Agregar grupo semántico</button>
+        </div>
+        <section id="editor-page" class="editor-page" aria-label="Vista previa del tablero"></section>
+        <p class="editor-hint">Arrastra las tarjetas para cambiar su posición. Selecciona una para validarla, sustituirla o eliminarla.</p>
+      </main>
+    </div>
+  </dialog>
+  <dialog id="editor-semantic-dialog" class="predefined-add-dialog">
+    <form id="editor-semantic-form" class="predefined-add-panel">
+      <header>
+        <div><h2>Agregar grupo semántico</h2><p>Busca todos los pictogramas asociados y crea las páginas adicionales necesarias.</p></div>
+        <button id="close-editor-semantic" type="button">Cerrar</button>
+      </header>
+      <label for="editor-semantic-terms">Lista de palabras</label>
+      <textarea id="editor-semantic-terms" rows="7" placeholder="Una palabra por lÃ­nea o separadas por comas"></textarea>
+      <div class="semantic-dialog-actions"><button type="submit">Agregar</button><button id="clear-editor-semantic" type="button">Limpiar</button></div>
+      <p id="editor-semantic-status" role="status" aria-live="polite"></p>
+    </form>
+  </dialog>
+  <dialog id="pictogram-picker" class="picker-dialog">
+    <form id="picker-search" class="picker-shell">
+      <header><div><h2>Elegir pictograma</h2><p>Busca en ARASAAC y revisa varias alternativas antes de integrarla.</p></div><button id="close-picker-button" type="button">Cerrar</button></header>
+      <div class="picker-searchbar"><input id="picker-query" required placeholder="Ejemplo: lengua de signos"><button type="submit">Buscar</button></div>
+      <div class="png-upload">
+        <span>O utiliza una imagen propia:</span>
+        <label class="upload-button">Seleccionar archivo PNG <input id="png-file-input" type="file" accept="image/png,.png"></label>
+        <small>Se ajustará automáticamente al espacio del pictograma sin deformarse.</small>
+      </div>
+      <div id="picker-status" role="status"></div>
+      <div id="picker-results" class="picker-results"></div>
+      <section id="picker-confirmation" class="picker-confirmation" hidden>
+        <img id="selected-pictogram-image" alt="Vista previa del pictograma seleccionado">
+        <div>
+          <h3>Pictograma seleccionado</h3>
+          <label>Escribe la etiqueta que aparecerá en el tablero
+            <input id="picker-label" placeholder="Ejemplo: Lengua de señas">
+          </label>
+          <div class="confirmation-actions">
+            <button id="back-to-results-button" type="button">Elegir otra imagen</button>
+            <button id="confirm-pictogram-button" type="button">Integrar al tablero</button>
+          </div>
+        </div>
+      </section>
+    </form>
+  </dialog>
+  <dialog id="api-services-dialog" class="api-dialog">
+    <section class="api-panel">
+      <header><div><h2>Servicios API</h2><p>Disponibilidad, autenticación y uso de proveedores externos.</p></div><button id="close-api-services" type="button">Cerrar</button></header>
+      <div class="api-toolbar"><button id="verify-all-providers" type="button">Verificar todos</button><span id="api-global-status" role="status"></span></div>
+      <div class="api-table-wrap"><table class="api-table"><thead><tr><th>Servicio</th><th>Estado</th><th>Autenticación</th><th>Última verificación</th><th>Tiempo</th><th>Activo</th><th>Acciones</th></tr></thead><tbody id="api-status-body"></tbody></table></div>
+      <p class="api-note">Las credenciales se envÃ­an Ãºnicamente al servidor local y permanecen durante la sesiÃ³n; no se almacenan en el navegador.</p>
+    </section>
+  </dialog>
+  <dialog id="api-link-dialog" class="api-link-dialog">
+    <form id="api-link-form" class="api-link-panel">
+      <header><div><h2>Vincular servicio API</h2><p id="api-link-provider-name"></p></div><button id="close-api-link" type="button">Cerrar</button></header>
+      <input id="api-link-provider-id" type="hidden">
+      <label>Clave o token API<input id="api-link-key" type="password" autocomplete="off"></label>
+      <label>Usuario<input id="api-link-username" autocomplete="username"></label>
+      <label>ContraseÃ±a<input id="api-link-password" type="password" autocomplete="current-password"></label>
+      <div class="confirmation-actions"><button type="submit">Conectar</button></div>
+      <p id="api-link-status" role="status" aria-live="polite"></p>
+    </form>
+  </dialog>
+  <dialog id="predefined-add-dialog" class="predefined-add-dialog">
+    <form id="predefined-add-form" class="predefined-add-panel">
+      <header>
+        <div>
+          <h2 id="predefined-add-title">Agregar pictograma</h2>
+          <p id="predefined-add-help">Escribe el concepto que deseas integrar.</p>
+        </div>
+        <button id="close-predefined-add" type="button">Cerrar</button>
+      </header>
+      <input id="predefined-add-board-id" type="hidden">
+      <input id="predefined-add-mode" type="hidden" value="single">
+      <label for="predefined-add-terms">Conceptos o palabras</label>
+      <textarea id="predefined-add-terms" rows="6" placeholder="Ejemplo: frÃ­o, calor, cobija, ventilador"></textarea>
+      <small>Escribe una palabra o concepto por lÃ­nea, o sepÃ¡ralos mediante comas.</small>
+      <div class="confirmation-actions"><button type="submit">Agregar</button></div>
+      <p id="predefined-add-status" role="status" aria-live="polite"></p>
+    </form>
+  </dialog>
+  <footer class="app-footer no-print">
+    AplicaciÃ³n institucional del Instituto Mexicano del Seguro Social para fines informativos, accesibles y no comerciales. Utiliza pictogramas de ARASAAC, OpenSymbols, Global Symbols y SymboTalk conforme a sus respectivas licencias.
+  </footer>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

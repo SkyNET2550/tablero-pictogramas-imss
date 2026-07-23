@@ -1,0 +1,11 @@
+{
+  "me siento mal": ["dolor", "médico", "hospital", "ayuda"],
+  "no puedo respirar": ["respirar", "emergencia", "hospital", "ambulancia"],
+  "quiero ir al baño": ["baño", "ayuda", "acompañamiento"],
+  "tengo hambre": ["comida", "ayuda", "quiero"],
+  "tengo sed": ["agua", "beber", "quiero"],
+  "no entiendo": ["no entiendo", "repetir", "ayuda"],
+  "necesito atención": ["médico", "enfermera", "hospital", "cita"],
+  "me duele": ["dolor", "médico", "medicina", "ayuda"],
+  "estoy perdido": ["orientación", "módulo", "ayuda", "información"]
+}

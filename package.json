@@ -1,0 +1,22 @@
+{
+  "name": "arasaac-tableros-html",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/server.js",
+    "build": "node scripts/build-static.js",
+    "init:multisource": "node scripts/init-multisource.js",
+    "test": "node --test tests/*.test.js",
+    "backup": "node scripts/backup.js",
+    "audit:licenses": "node scripts/legal-audit.js",
+    "audit:a11y": "node scripts/accessibility-audit.js",
+    "export:pdf": "echo La exportación PDF está disponible desde el editor",
+    "export:docx": "echo La exportacion DOCX esta disponible desde el editor",
+    "export:image": "echo La exportación de imagen está disponible desde el editor",
+    "start": "node scripts/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

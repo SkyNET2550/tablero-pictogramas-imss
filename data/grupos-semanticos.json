@@ -1,0 +1,48 @@
+{
+  "documento": {
+    "titulo": "Tablero institucional de comunicación por pictogramas",
+    "idioma": "es",
+    "formato": "carta",
+    "orientacion": "vertical",
+    "columnas": 4,
+    "filas": 4
+  },
+  "grupos": [
+    {
+      "id": "comunicacion-basica",
+      "titulo": "Comunicación básica",
+      "descripcion": "Expresiones esenciales para interacción inmediata.",
+      "conceptos": ["hola", "sí", "no", "ayuda", "gracias", "adiós", "quiero", "no quiero", "entiendo", "no entiendo", "por favor", "esperar", "repetir", "hablar despacio", "familia", "acompañante"]
+    },
+    {
+      "id": "atencion-medica",
+      "titulo": "Atención médica",
+      "descripcion": "Conceptos básicos para consulta, urgencia y atención clínica.",
+      "conceptos": ["médico", "enfermera", "hospital", "consulta", "cita", "dolor", "fiebre", "tos", "náusea", "respirar", "medicina", "inyección", "alergia", "sangre", "emergencia", "ambulancia"]
+    },
+    {
+      "id": "orientacion-institucional",
+      "titulo": "Orientación institucional",
+      "descripcion": "Conceptos para atención, ubicación y orientación en edificios públicos.",
+      "conceptos": ["entrada", "salida", "recepción", "módulo de información", "turno", "fila", "ventanilla", "sala de espera", "baño", "elevador", "rampa", "escalera", "derecha", "izquierda", "arriba", "abajo"]
+    },
+    {
+      "id": "tramites-servicios",
+      "titulo": "Trámites y servicios",
+      "descripcion": "Conceptos frecuentes para trámites institucionales.",
+      "conceptos": ["documento", "identificación", "firma", "solicitud", "formulario", "copia", "original", "credencial", "número", "nombre", "teléfono", "dirección", "correo electrónico", "recibo", "pago", "autorización"]
+    },
+    {
+      "id": "proteccion-civil",
+      "titulo": "Protección civil y emergencia",
+      "descripcion": "Conceptos para evacuación, riesgo y respuesta inmediata.",
+      "conceptos": ["emergencia", "salida de emergencia", "evacuar", "alarma", "incendio", "sismo", "riesgo", "peligro", "ayuda", "esperar", "no correr", "no empujar", "punto de reunión", "primeros auxilios", "seguridad", "protección"]
+    },
+    {
+      "id": "accesibilidad",
+      "titulo": "Accesibilidad y apoyos",
+      "descripcion": "Conceptos vinculados a apoyos, ajustes razonables y accesibilidad.",
+      "conceptos": ["silla de ruedas", "bastón", "perro guía", "lengua de señas", "intérprete", "apoyo", "acompañante", "lectura fácil", "rampa", "elevador", "baño accesible", "audífono", "subtítulos", "comunicación", "ayuda técnica", "ajuste razonable"]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "group": "atencion-medica",
+    "term": "náusea",
+    "error": "HTTP 404"
+  },
+  {
+    "group": "orientacion-institucional",
+    "term": "ventanilla",
+    "error": "HTTP 404"
+  },
+  {
+    "group": "tramites-servicios",
+    "term": "identificación",
+    "error": "HTTP 404"
+  },
+  {
+    "group": "tramites-servicios",
+    "term": "original",
+    "error": "HTTP 404"
+  },
+  {
+    "group": "tramites-servicios",
+    "term": "credencial",
+    "error": "HTTP 404"
+  },
+  {
+    "group": "tramites-servicios",
+    "term": "autorización",
+    "error": "HTTP 404"
+  },
+  {
+    "group": "proteccion-civil",
+    "term": "sismo",
+    "error": "HTTP 404"
+  },
+  {
+    "group": "proteccion-civil",
+    "term": "primeros auxilios",
+    "error": "HTTP 404"
+  }
+]

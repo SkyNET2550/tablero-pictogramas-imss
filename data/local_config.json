@@ -1,0 +1,7 @@
+{
+  "storage_path": "assets/pictograms",
+  "output_path": "outputs",
+  "default_language": "es",
+  "preferred_provider": "ARASAAC",
+  "offline_mode": false
+}

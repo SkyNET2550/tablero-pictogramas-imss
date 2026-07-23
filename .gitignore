@@ -1,0 +1,14 @@
+node_modules/
+.env
+outputs/
+output/
+logs/
+cache/
+backups/
+tmp-candidates/
+Guardados/
+assets/pictograms/*/raw/*
+assets/pictograms/*/normalized/*
+*.log
+.DS_Store
+.vercel/

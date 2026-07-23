@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-06-19T20:01:17.765Z",
+  "checks": {
+    "languageDeclared": true,
+    "skipLink": true,
+    "mainLandmark": true,
+    "imageAlternatives": true,
+    "visibleFocus": true,
+    "printLetter": true,
+    "keyboardCellMovement": true,
+    "noColorOnly": true,
+    "liveRegions": true
+  },
+  "passed": true,
+  "failures": [],
+  "manual_review_required": [
+    "Lector de pantalla NVDA/JAWS",
+    "Contraste con herramientas WCAG",
+    "Prueba con usuarios CAA",
+    "Orden de foco en todos los diálogos"
+  ]
+}

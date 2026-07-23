@@ -1,0 +1,58 @@
+{
+  "temas": [
+    {
+      "id": "dolor-abdominal",
+      "titulo": "Dolor de estómago o panza",
+      "descripcion": "Vocabulario para localizar el dolor, describir síntomas, señalar posibles causas y pedir atención.",
+      "aliases": ["dolor de panza", "me duele la panza", "dolor de estómago", "dolor abdominal", "dolor de barriga", "dolor de vientre", "panza", "barriga", "estómago", "indigestión"],
+      "secciones": [
+        {"titulo": "Dónde y cómo duele", "conceptos": ["dolor de barriga", "estómago", "vientre", "dolor fuerte", "dolor leve", "cólico", "ardor", "hinchazón"]},
+        {"titulo": "Síntomas relacionados", "conceptos": ["náuseas", "vómito", "diarrea", "estreñimiento", "fiebre", "gases", "mareo", "pérdida de apetito"]},
+        {"titulo": "Posibles enfermedades", "conceptos": ["gastritis", "gastroenteritis", "apendicitis", "úlcera", "infección intestinal", "intoxicación alimentaria", "reflujo", "parásitos intestinales"]},
+        {"titulo": "Qué necesito", "conceptos": ["médico", "hospital", "medicina", "agua", "baño", "descansar", "ambulancia", "emergencia"]}
+      ]
+    },
+    {
+      "id": "proteccion-civil",
+      "titulo": "Protección civil y emergencias",
+      "descripcion": "Conceptos para reconocer riesgos, seguir instrucciones y solicitar ayuda.",
+      "aliases": ["protección civil", "emergencia", "emergencias", "desastre", "riesgo", "peligro", "temblor", "sismo", "incendio", "evacuación"],
+      "secciones": [
+        {"titulo": "Tipos de emergencia", "conceptos": ["incendio", "terremoto", "inundación", "huracán", "explosión", "fuga de gas", "accidente", "emergencia médica"]},
+        {"titulo": "Acciones inmediatas", "conceptos": ["evacuar", "agacharse", "cubrirse", "sujetarse", "no correr", "no gritar", "no empujar", "seguir instrucciones"]},
+        {"titulo": "Lugares y señales", "conceptos": ["salida de emergencia", "ruta de evacuación", "punto de reunión", "zona segura", "alarma", "extintor", "escalera", "refugio"]},
+        {"titulo": "Ayuda y respuesta", "conceptos": ["protección civil", "bomberos", "policía", "ambulancia", "primeros auxilios", "herido", "pedir ayuda", "teléfono de emergencia"]}
+      ]
+    },
+    {
+      "id": "salud",
+      "titulo": "Salud y atención médica",
+      "descripcion": "Síntomas, personal sanitario, lugares y necesidades de atención.",
+      "aliases": ["salud", "enfermedad", "enfermo", "doctor", "médico", "hospital", "me siento mal"],
+      "secciones": [
+        {"titulo": "Síntomas", "conceptos": ["dolor", "fiebre", "tos", "mareo", "náuseas", "vómito", "sangrado", "dificultad para respirar"]},
+        {"titulo": "Atención", "conceptos": ["médico", "enfermera", "consulta", "hospital", "urgencias", "ambulancia", "medicina", "receta"]}
+      ]
+    },
+    {
+      "id": "accesibilidad",
+      "titulo": "Accesibilidad y apoyos",
+      "descripcion": "Apoyos para desplazamiento, comprensión y comunicación.",
+      "aliases": ["accesibilidad", "discapacidad", "apoyo", "ayuda técnica", "ajuste razonable"],
+      "secciones": [
+        {"titulo": "Movilidad y orientación", "conceptos": ["silla de ruedas", "bastón", "perro guía", "rampa", "elevador", "baño accesible", "acompañante", "asistencia"]},
+        {"titulo": "Comunicación accesible", "conceptos": ["lengua de señas", "intérprete", "lectura fácil", "subtítulos", "audífono", "pictogramas", "hablar despacio", "repetir"]}
+      ]
+    },
+    {
+      "id": "tramites",
+      "titulo": "Trámites y servicios",
+      "descripcion": "Documentos, pasos y necesidades habituales en oficinas de atención.",
+      "aliases": ["trámite", "trámites", "papeles", "documentos", "servicio público", "oficina"],
+      "secciones": [
+        {"titulo": "Documentos", "conceptos": ["identificación", "acta", "comprobante", "solicitud", "formulario", "copia", "original", "firma"]},
+        {"titulo": "Atención y proceso", "conceptos": ["información", "turno", "fila", "ventanilla", "cita", "pago", "recibo", "autorización"]}
+      ]
+    }
+  ]
+}
