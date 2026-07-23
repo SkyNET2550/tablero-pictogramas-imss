@@ -14,7 +14,6 @@ import { searchAllProviders } from "./providers/provider-registry.js";
 import { rankSemanticPictograms } from "./semantic/semanticEngine.js";
 import { institutionalHeaderHtml } from "./board-branding.js";
 import { INSTITUTIONAL_FOOTER } from "./config.js";
-import { initPictogramSpeech } from "./pictogram-speech.js";
 
 const container = document.querySelector("#boards-container");
 const status = document.querySelector("#status");
@@ -90,7 +89,6 @@ async function init() {
   status.textContent = "Cargando catálogo…";
   resetInitialRoute();
 initDismissibleMenu();
-initPictogramSpeech();
   document.querySelector("#logo-upload-button").addEventListener("click", goHome);
   document.querySelector("#menu-home-button").addEventListener("click", goHome);
   document.querySelector("#thematic-boards-button").addEventListener("click", () => {

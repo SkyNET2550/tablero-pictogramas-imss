@@ -21,7 +21,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible, [tabindex]:foc
 .app-menu-panel button { min-height: 29px; padding: 4px 7px; border: 1px solid #b7c6d3; font-size: 11px; text-align: left; }
 .search-box { position: relative; width: 100%; margin-top: 2px; }
 .search-box label { display: block; margin-bottom: 3px; font-weight: 700; font-size: 14px; }
-.search-box > div { display: grid; grid-template-columns: minmax(0, 1fr) 88px 58px; gap: 8px; align-items: end; }
+.search-box > div { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 8px; align-items: end; }
 .search-box input { flex: 1; min-width: 0; min-height: 40px; padding: 7px 12px; border: 2px solid #fff; border-radius: 7px; font: 16px Arial, sans-serif; }
 .institutional-heading > .search-box { grid-column: 2; grid-row: 2; align-self: end; margin-top: 0; }
 .header-menu { grid-column: 1; grid-row: 2; width: 42px; align-self: end; justify-self: center; }
@@ -107,13 +107,6 @@ input { font: inherit; }
 .initial-gallery button { border-color: #087a88; }
 .initial-gallery #refresh-gallery-button { min-height: 38px; padding: 6px 9px; font-size: 12px; }
 .quick-search { width: min(920px, 100%); display: grid; grid-template-columns: minmax(220px, 1fr) auto auto 1px auto; gap: 6px; align-items: center; }
-.audio-toggle { min-height: 40px; padding: 3px 7px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px solid #d8e7f3; border-radius: 8px; color: #073b73; background: #fff; box-shadow: inset 0 -1px 0 #c5d9e9; font-size: 10px; line-height: 1; font-weight: 800; letter-spacing: .01em; white-space: nowrap; cursor: pointer; user-select: none; }
-.audio-toggle:focus-within { outline: 2px solid #f6b400; outline-offset: 2px; }
-.audio-toggle input { position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
-.audio-switch { position: relative; width: 34px; height: 18px; border-radius: 999px; background: #b9c9d6; box-shadow: inset 0 1px 3px #001b3140; transition: background .18s ease; }
-.audio-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #001b3166; transition: transform .18s ease; }
-.audio-toggle input:checked + .audio-switch { background: #087a88; }
-.audio-toggle input:checked + .audio-switch::after { transform: translateX(16px); }
 .quick-search-separator { width: 1px; height: 28px; margin: 0 4px; background: #9eb1c0; }
 .quick-search label { grid-column: 1 / -1; color: #073b73; font-size: 13px; font-weight: 700; }
 .quick-search input { min-height: 38px; padding: 7px 10px; border: 1px solid #8ba4b8; border-radius: 6px; }
@@ -259,7 +252,7 @@ dialog::backdrop { background: #001b31cc; }
 @media screen and (max-width: 850px) {
   .page { width: 100%; height: auto; min-height: 11in; margin: 8px 0; }
   .app-header { padding: 9px 12px; }
-  .search-box > div { grid-template-columns: minmax(0, 1fr) 74px 50px; }
+  .search-box > div { grid-template-columns: minmax(0, 1fr) 74px; }
   .search-box input { width: 100%; }
   .institutional-heading { grid-template-columns: 62px minmax(0, 1fr); gap: 5px 9px; }
   .logo-slot { width: 58px; height: 72px; }
@@ -300,13 +293,9 @@ dialog::backdrop { background: #001b31cc; }
   .brand span small { margin-left: 3px; font-size: .78em; }
   .search-box { width: 100%; min-width: 0; max-width: 100%; }
   .search-box label { font-size: 11px; }
-  .search-box > div { width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 58px 46px; gap: 5px; }
+  .search-box > div { width: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 58px; gap: 5px; }
   .search-box input { width: 100%; min-width: 0; max-width: 100%; min-height: 34px; padding: 5px 8px; font-size: 13px; }
   .search-box > div button { width: 100%; min-width: 0; max-width: 100%; min-height: 32px; padding: 4px 5px; font-size: 9px; }
-  .search-box .audio-toggle { width: 46px; min-width: 46px; min-height: 32px; padding: 2px 4px; font-size: 8px; }
-  .search-box .audio-switch { width: 28px; height: 15px; }
-  .search-box .audio-switch::after { top: 2px; left: 2px; width: 11px; height: 11px; }
-  .search-box .audio-toggle input:checked + .audio-switch::after { transform: translateX(13px); }
   .global-board-types { grid-template-columns: 1fr 1fr; }
   .global-board-types button { min-height: 34px; padding: 4px; font-size: 8px; }
   .board-hierarchy, .initial-gallery, .semantic-summary { width: calc(100% - 16px); margin: 10px 8px; padding: 12px; }
