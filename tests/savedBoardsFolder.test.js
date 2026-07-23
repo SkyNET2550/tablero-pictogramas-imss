@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, mkdir, readFile } from "node:fs/promises";
 
 test("las copias editables se guardan por defecto en la carpeta Guardados", async () => {
+  await mkdir("../Guardados", { recursive: true });
   await access("../Guardados");
   const client = await readFile("src/board-editor.js", "utf8");
   const server = await readFile("scripts/server.js", "utf8");
