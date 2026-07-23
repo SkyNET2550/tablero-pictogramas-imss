@@ -609,8 +609,16 @@ function printBoard() {
   requestAnimationFrame(() => window.print());
 }
 async function openEditableBoardDialog() {
+  if (!usesNativeDialogs()) {
+    document.querySelector("#open-editable-input").click();
+    return;
+  }
   try {
     const response = await fetch("/api/native-dialog/open", { method: "POST" });
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      document.querySelector("#open-editable-input").click();
+      return;
+    }
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || `Error ${response.status}`);
     if (result.cancelled) return;
@@ -657,7 +665,7 @@ async function saveCurrentEditableBoard() {
 
 async function exportBinary(format) {
   const board = activeBoard();
-  const button = document.querySelector(`#export-${format}-button`);
+  const button = document.querySelector(format === "png" ? "#export-image-button" : `#export-${format}-button`);
   const original = button.textContent;
   button.disabled = true;
   button.textContent = `Generando ${format === "docx" ? "DOCX" : "imagen"}…`;
@@ -713,6 +721,7 @@ footer{position:absolute;left:12mm;right:12mm;bottom:5mm;padding-top:4px;border-
 }
 
 async function saveWithNativeDialog(blob, suggestedName, types) {
+  if (!usesNativeDialogs()) return saveWithBrowser(blob, suggestedName, types);
   const bytes = new Uint8Array(await blob.arrayBuffer());
   let binary = "";
   for (let index = 0; index < bytes.length; index += 0x8000) {
@@ -727,9 +736,35 @@ async function saveWithNativeDialog(blob, suggestedName, types) {
       base64: btoa(binary)
     })
   });
+  if (!response.headers.get("content-type")?.includes("application/json")) {
+    return saveWithBrowser(blob, suggestedName, types);
+  }
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || `Error ${response.status}`);
   return !result.cancelled;
+}
+
+function usesNativeDialogs() {
+  return ["127.0.0.1", "localhost"].includes(location.hostname);
+}
+
+async function saveWithBrowser(blob, suggestedName, types) {
+  if ("showSaveFilePicker" in window) {
+    const handle = await window.showSaveFilePicker({ suggestedName, types });
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return true;
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = suggestedName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
 }
 
 function windowsFileFilter(types, suggestedName) {
