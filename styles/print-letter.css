@@ -19,6 +19,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible, [tabindex]:foc
 .app-menu summary::-webkit-details-marker { display: none; }
 .app-menu-panel { position: absolute; right: 0; top: calc(100% + 5px); width: 180px; padding: 7px; display: grid; gap: 5px; border-radius: 7px; background: #fff; box-shadow: 0 5px 18px #001b3166; }
 .app-menu-panel button { min-height: 29px; padding: 4px 7px; border: 1px solid #b7c6d3; font-size: 11px; text-align: left; }
+#speech-toggle-button[aria-pressed="true"] { color: #fff; background: #087a88; border-color: #087a88; }
 .search-box { position: relative; width: 100%; margin-top: 2px; }
 .search-box label { display: block; margin-bottom: 3px; font-weight: 700; font-size: 14px; }
 .search-box > div { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 8px; }
