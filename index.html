@@ -90,18 +90,20 @@
       <aside class="editor-sidebar">
         <button id="new-board-button" type="button">+ Nuevo tablero</button>
         <div id="board-list" class="board-list"></div>
+        <section class="sidebar-actions sidebar-save-actions" aria-label="Guardar y abrir tableros">
+          <h3>Guardar</h3>
+          <button id="save-editable-button" type="button">Guardar</button>
+          <button id="open-editable-button" type="button">Abrir tableros guardados</button>
+          <input id="open-editable-input" type="file" accept="application/json,.json" hidden>
+          <button id="delete-board-button" class="danger" type="button">Eliminar tablero</button>
+        </section>
         <section class="sidebar-actions" aria-label="Acciones del tablero">
           <h3>Acciones</h3>
           <button id="export-pdf-button" type="button">Exportar PDF</button>
           <button id="export-image-button" type="button">Exportar imagen</button>
           <button id="export-docx-button" type="button">Exportar Word editable</button>
-          <button id="save-editable-button" type="button">Guardar</button>
-          <button id="open-editable-button" type="button">Abrir tableros guardados</button>
-          <input id="open-editable-input" type="file" accept="application/json,.json" hidden>
           <button id="print-current-button" type="button">Imprimir tablero</button>
         </section>
-        <button id="duplicate-board-button" type="button">Duplicar tablero</button>
-        <button id="delete-board-button" class="danger" type="button">Eliminar tablero</button>
       </aside>
       <main class="editor-workspace">
         <div class="editor-properties">

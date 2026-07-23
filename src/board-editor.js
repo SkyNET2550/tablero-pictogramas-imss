@@ -19,18 +19,19 @@ let selectedPickerId = null;
 let selectedPickerImage = null;
 let externalSelection = null;
 let semanticDraftDirty = false;
+let editorDirty = false;
+let editorSessionSnapshot = null;
 const semanticDraftSnapshots = new Map();
 
 export function initBoardEditor() {
-  document.querySelector("#open-editor-button").addEventListener("click", () => { render(); editor.showModal(); });
+  document.querySelector("#open-editor-button").addEventListener("click", openEditor);
   document.querySelector("#close-editor-button").addEventListener("click", requestEditorClose);
   editor.addEventListener("cancel", event => {
-    if (!semanticDraftDirty) return;
+    if (!semanticDraftDirty && !editorDirty) return;
     event.preventDefault();
     requestEditorClose();
   });
   document.querySelector("#new-board-button").addEventListener("click", createBoard);
-  document.querySelector("#duplicate-board-button").addEventListener("click", duplicateBoard);
   document.querySelector("#delete-board-button").addEventListener("click", deleteBoard);
   document.querySelector("#close-picker-button").addEventListener("click", () => picker.close());
   document.querySelector("#print-current-button").addEventListener("click", printBoard);
@@ -59,6 +60,13 @@ export function initBoardEditor() {
   window.addEventListener("afterprint", () => document.body.classList.remove("print-editor"));
 }
 
+function openEditor() {
+  editorSessionSnapshot = { boards: structuredClone(boards), activeId };
+  editorDirty = false;
+  render();
+  editor.showModal();
+}
+
 export function openPredefinedBoardEditor(predefinedBoard) {
   const existing = boards.find(board => board.predefinedId === predefinedBoard.id);
   if (existing) {
@@ -72,9 +80,11 @@ export function openPredefinedBoardEditor(predefinedBoard) {
     };
     boards.push(board);
     activeId = board.id;
-    save();
+    markDirty(); save();
   }
   render();
+  editorSessionSnapshot = { boards: structuredClone(boards), activeId };
+  editorDirty = false;
   editor.showModal();
 }
 
@@ -109,22 +119,17 @@ function normalizeBoard(board) {
   return { ...board, cells: removeBoardDuplicates(cells) };
 }
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(boards)); }
+function markDirty() { editorDirty = true; }
 
 function createBoard() {
   const board = { id: uid(), title: `Tablero ${boards.length + 1}`, cells: Array(16).fill(null) };
-  boards.push(board); activeId = board.id; save(); render();
-}
-function duplicateBoard() {
-  const source = activeBoard();
-  const copy = structuredClone(source);
-  copy.id = uid(); copy.title += " (copia)";
-  boards.push(copy); activeId = copy.id; save(); render();
+  boards.push(board); activeId = board.id; markDirty(); save(); render();
 }
 function deleteBoard() {
   if (boards.length === 1) {
     boards[0] = { id: uid(), title: "Mi tablero", cells: Array(16).fill(null) };
   } else boards = boards.filter(board => board.id !== activeId);
-  activeId = boards[0].id; save(); render();
+  activeId = boards[0].id; markDirty(); save(); render();
 }
 function updateProperties() {
   const board = activeBoard();
@@ -137,7 +142,7 @@ function updateProperties() {
   } else {
     board.title = nextTitle;
   }
-  save(); renderPage(); renderList();
+  markDirty(); save(); renderPage(); renderList();
 }
 
 function openEditorSemanticDialog() {
@@ -218,7 +223,7 @@ function render() {
 }
 function renderList() {
   list.replaceChildren();
-  boards.forEach(board => {
+  boards.filter(board => !board.semanticParentId).forEach(board => {
     const button = document.createElement("button");
     button.type = "button"; button.textContent = board.title;
     if (board.id === activeId) button.className = "active";
@@ -275,14 +280,14 @@ function validateBoardPage(boardId) {
   const board = boards.find(item => item.id === boardId);
   if (!board) return;
   board.cells.forEach(cell => { if (cell) cell.validated = true; });
-  save();
+  markDirty(); save();
   renderPage();
 }
 
 function deleteBoardPage(boardId) {
   if (boards.length === 1) {
     boards[0].cells = Array(16).fill(null);
-    save();
+    markDirty(); save();
     render();
     return;
   }
@@ -290,7 +295,7 @@ function deleteBoardPage(boardId) {
   if (index < 0) return;
   boards.splice(index, 1);
   if (activeId === boardId) activeId = boards[Math.max(0, index - 1)]?.id || boards[0].id;
-  save();
+  markDirty(); save();
   render();
 }
 
@@ -302,15 +307,15 @@ function makeCell(cell, index, boardId = activeId) {
   article.setAttribute("role", "group");
   article.setAttribute("aria-label", `${cell.label}. Posici?n ${index + 1} de 16.`);
   if (cell.imageData && !cell.normalized) normalizeStoredPng(cell);
-  article.innerHTML = `<img src="${cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id)}" alt="${escapeHtml(cell.label)}"><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validaci?n" : "Validar"}</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
+  article.innerHTML = `<img src="${cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id)}" alt="${escapeHtml(cell.label)}"><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validación" : "Validar"}</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
   article.addEventListener("click", event => {
     document.querySelectorAll(".editor-cell.selected").forEach(item => item.classList.remove("selected"));
     article.classList.add("selected");
     activeId = boardId;
     const action = event.target.dataset.action;
-    if (action === "validate") { cell.validated = !cell.validated; save(); renderPage(); }
+    if (action === "validate") { cell.validated = !cell.validated; markDirty(); save(); renderPage(); }
     if (action === "replace") openPicker(index);
-    if (action === "delete") { activeBoard().cells[index] = null; save(); renderPage(); }
+    if (action === "delete") { removeCellAndShift(index); markDirty(); save(); renderPage(); }
   });
   article.addEventListener("dragstart", () => { activeId = boardId; draggedIndex = index; });
   article.addEventListener("keydown", event => {
@@ -357,8 +362,14 @@ function swapSlots(from, to) {
   const cells = activeBoard().cells;
   [cells[from], cells[to]] = [cells[to], cells[from]];
   draggedIndex = null;
-  save();
+  markDirty(); save();
   renderPage();
+}
+
+function removeCellAndShift(index) {
+  const cells = activeBoard().cells;
+  cells.splice(index, 1);
+  cells.push(null);
 }
 
 function openPicker(index) {
@@ -522,22 +533,37 @@ function choosePictogram(selection) {
     if (emptyIndex < 0) return;
     activeBoard().cells[emptyIndex] = cell;
   } else activeBoard().cells[replaceIndex] = cell;
-  save(); renderPage(); picker.close();
+  markDirty(); save(); renderPage(); picker.close();
 }
 async function requestEditorClose() {
-  if (!semanticDraftDirty) {
+  if (!semanticDraftDirty && !editorDirty) {
     editor.close();
     return;
   }
-  const saveBeforeClose = confirm("Hay tableros creados desde un grupo semántico que no se han guardado. Acepta para guardar antes de salir. Cancela para salir sin guardar y eliminar esos cambios.");
+  const saveBeforeClose = confirm("Hay cambios no guardados en el tablero. Acepta para guardar antes de salir. Cancela para salir sin guardar y eliminar lo realizado en esta sesión.");
   if (saveBeforeClose) {
     const saved = await saveCurrentEditableBoard();
     if (!saved) return;
     markSemanticDraftSaved();
   } else {
-    discardSemanticDraft();
+    discardEditorSession();
   }
   editor.close();
+}
+
+function discardEditorSession() {
+  if (!editorSessionSnapshot) {
+    discardSemanticDraft();
+    return;
+  }
+  boards = structuredClone(editorSessionSnapshot.boards);
+  activeId = editorSessionSnapshot.activeId;
+  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", cells: Array(16).fill(null) }];
+  semanticDraftDirty = false;
+  editorDirty = false;
+  semanticDraftSnapshots.clear();
+  save();
+  render();
 }
 
 function rememberDraftState(board) {
@@ -550,6 +576,8 @@ function rememberNewDraft(id) {
 
 function markSemanticDraftSaved() {
   semanticDraftDirty = false;
+  editorDirty = false;
+  editorSessionSnapshot = { boards: structuredClone(boards), activeId };
   semanticDraftSnapshots.clear();
   boards.forEach(board => { if (board.semanticGenerated) board.saved = true; });
   save();

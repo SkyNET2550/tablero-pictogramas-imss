@@ -1,4 +1,4 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
@@ -15,13 +15,15 @@ test("el constructor agrega grupos semánticos con páginas de 16 y mismo títul
   assert.doesNotMatch(editor, /title: `\$\{base\.title\}.*Página/);
 });
 
-test("los tableros semánticos nuevos exigen guardar o se descartan al cerrar", async () => {
+test("los cambios nuevos exigen guardar o se descartan al cerrar", async () => {
   const html = await readFile("index.html", "utf8");
   const editor = await readFile("src/board-editor.js", "utf8");
   assert.match(html, /id="save-editable-button"/);
   assert.match(editor, /semanticDraftDirty/);
+  assert.match(editor, /editorDirty/);
+  assert.match(editor, /editorSessionSnapshot/);
   assert.match(editor, /requestEditorClose/);
   assert.match(editor, /saveCurrentEditableBoard/);
-  assert.match(editor, /discardSemanticDraft/);
-  assert.match(editor, /confirm\("Hay tableros creados desde un grupo semántico/);
+  assert.match(editor, /discardEditorSession/);
+  assert.match(editor, /confirm\("Hay cambios no guardados en el tablero/);
 });

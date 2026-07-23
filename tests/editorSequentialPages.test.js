@@ -25,3 +25,12 @@ test("los tableros semánticos se presentan como páginas secuenciales hacia aba
   assert.match(editor, /Eliminar página/);
   assert.match(styles, /\.editor-page-sequence \{[^}]*flex-direction: column/s);
 });
+
+test("eliminar un pictograma compacta la página y desplaza los posteriores", async () => {
+  const editor = await readFile("src/board-editor.js", "utf8");
+
+  assert.match(editor, /function removeCellAndShift\(index\)/);
+  assert.match(editor, /cells\.splice\(index, 1\)/);
+  assert.match(editor, /cells\.push\(null\)/);
+  assert.match(editor, /removeCellAndShift\(index\)/);
+});
