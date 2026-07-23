@@ -8,7 +8,10 @@ test("incluye botón para habilitar o deshabilitar lectura de pictogramas", asyn
   const speech = await readFile("src/pictogram-speech.js", "utf8");
 
   assert.match(html, /id="speech-toggle-button"/);
+  assert.match(html, /gallery-title-row/);
+  assert.match(html, /<h2 id="gallery-title">Acervo de pictogramas<\/h2><button id="speech-toggle-button"/);
   assert.match(html, /aria-pressed="false"/);
+  assert.doesNotMatch(html.match(/<div class="app-menu-panel">[\s\S]*?<\/div>/)?.[0] || "", /speech-toggle-button/);
   assert.match(main, /initPictogramSpeech/);
   assert.match(speech, /SpeechSynthesisUtterance/);
   assert.match(speech, /utterance\.lang = "es-MX"/);

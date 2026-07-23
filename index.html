@@ -28,7 +28,6 @@
           <button id="open-editor-button" type="button">Construir tablero</button>
           <button id="thematic-boards-button" type="button">Tableros temáticos</button>
           <button id="predefined-boards-button" type="button">Tableros predefinidos</button>
-          <button id="speech-toggle-button" type="button" aria-pressed="false">Lectura: desactivada</button>
           <button id="api-services-button" type="button">Servicios API</button>
         </div>
       </details>
@@ -47,7 +46,7 @@
   <main id="main-content" class="home-view">
   <section id="initial-gallery" class="initial-gallery no-print" aria-labelledby="gallery-title">
     <header>
-      <h2 id="gallery-title">Acervo de pictogramas</h2>
+      <div class="gallery-title-row"><h2 id="gallery-title">Acervo de pictogramas</h2><button id="speech-toggle-button" class="speech-toggle-button" type="button" aria-pressed="false">?? Lectura: desactivada</button></div>
       <form id="quick-search" class="quick-search" role="search">
         <label for="quick-search-input" class="visually-hidden">Búsqueda rápida de pictogramas por texto o título</label>
         <input id="quick-search-input" type="search" placeholder="Buscar pictogramas por texto o título" autocomplete="off">

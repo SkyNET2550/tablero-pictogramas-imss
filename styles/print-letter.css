@@ -19,7 +19,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible, [tabindex]:foc
 .app-menu summary::-webkit-details-marker { display: none; }
 .app-menu-panel { position: absolute; right: 0; top: calc(100% + 5px); width: 180px; padding: 7px; display: grid; gap: 5px; border-radius: 7px; background: #fff; box-shadow: 0 5px 18px #001b3166; }
 .app-menu-panel button { min-height: 29px; padding: 4px 7px; border: 1px solid #b7c6d3; font-size: 11px; text-align: left; }
-#speech-toggle-button[aria-pressed="true"] { color: #fff; background: #087a88; border-color: #087a88; }
+.speech-toggle-button[aria-pressed="true"] { color: #fff; background: #087a88; border-color: #087a88; }
 .search-box { position: relative; width: 100%; margin-top: 2px; }
 .search-box label { display: block; margin-bottom: 3px; font-weight: 700; font-size: 14px; }
 .search-box > div { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 8px; }
@@ -102,9 +102,11 @@ input { font: inherit; }
 .loading-pictograms::after { content: "Completando pictogramas asociadosâ€¦"; position: absolute; left: 50%; bottom: 18mm; transform: translateX(-50%); padding: 5px 9px; border-radius: 5px; color: #fff; background: #073b73; font-size: 11px; }
 .initial-gallery { max-width: 1100px; margin: 20px auto; padding: 18px; border-radius: 10px; background: #fff; box-shadow: 0 2px 12px #0002; }
 .initial-gallery > header { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; margin-bottom: 14px; }
+.gallery-title-row { width: min(920px, 100%); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .initial-gallery h2, .initial-gallery p { margin: 2px 0; }
 .initial-gallery h2 { color: #073b73; }
 .initial-gallery button { border-color: #087a88; }
+.speech-toggle-button { min-height: 34px; padding: 6px 10px; white-space: nowrap; font-size: 12px; }
 .initial-gallery #refresh-gallery-button { min-height: 38px; padding: 6px 9px; font-size: 12px; }
 .quick-search { width: min(920px, 100%); display: grid; grid-template-columns: minmax(220px, 1fr) auto auto 1px auto; gap: 6px; align-items: center; }
 .quick-search-separator { width: 1px; height: 28px; margin: 0 4px; background: #9eb1c0; }
@@ -270,6 +272,7 @@ dialog::backdrop { background: #001b31cc; }
   .picker-results { grid-template-columns: repeat(2, 1fr); }
   .random-pictograms { grid-template-columns: repeat(3, 1fr); }
   .initial-gallery > header { align-items: stretch; }
+  .gallery-title-row { flex-direction: column; align-items: stretch; }
   .quick-search { grid-template-columns: 1fr 1fr; }
   .quick-search input { grid-column: 1 / -1; }
   .quick-search-separator { display: none; }
