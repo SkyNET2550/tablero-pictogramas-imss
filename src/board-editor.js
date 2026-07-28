@@ -49,7 +49,6 @@ export function initBoardEditor() {
   });
   document.querySelector("#back-to-results-button").addEventListener("click", showPickerResults);
   document.querySelector("#confirm-pictogram-button").addEventListener("click", confirmPictogram);
-  document.querySelector("#editor-add-blank-page").addEventListener("click", addBlankPage);
   document.querySelector("#editor-add-semantic-group").addEventListener("click", openEditorSemanticDialog);
   document.querySelector("#close-editor-semantic").addEventListener("click", () => semanticDialog.close());
   document.querySelector("#clear-editor-semantic").addEventListener("click", () => {
@@ -137,8 +136,8 @@ function createBoard() {
   const board = { id: uid(), title: `Tablero ${boards.length + 1}`, cells: Array(16).fill(null) };
   boards.push(board); activeId = board.id; markDirty(); save(); render();
 }
-function addBlankPage() {
-  const board = activeBoard();
+function addBlankPage(sourceBoardId = activeId) {
+  const board = boards.find(item => item.id === sourceBoardId) || activeBoard();
   const root = rootBoardFor(board);
   const rootId = root.semanticRootId || root.id;
   root.semanticRootId = rootId;
@@ -297,13 +296,14 @@ function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
   header.innerHTML = institutionalHeaderHtml(escapeHtml(board.title), "editor-board-brand-image");
   const controls = document.createElement("div");
   controls.className = "editor-page-controls no-print";
-  controls.innerHTML = `<span>Página ${pageIndex + 1} de ${totalPages}</span><button type="button" data-page-action="validate">Validar página</button><button type="button" data-page-action="delete">Eliminar página</button>`;
+  controls.innerHTML = `<span>Página ${pageIndex + 1} de ${totalPages}</span><button type="button" data-page-action="validate">Validar página</button><button type="button" data-page-action="delete">Eliminar página</button><button type="button" data-page-action="add">Agregar página</button>`;
   controls.addEventListener("click", event => {
     const action = event.target.dataset.pageAction;
     if (!action) return;
     activeId = board.id;
     if (action === "validate") validateBoardPage(board.id);
     if (action === "delete") deleteBoardPage(board.id);
+    if (action === "add") addBlankPage(board.id);
   });
   const grid = document.createElement("div");
   grid.className = "editor-grid";
@@ -345,14 +345,42 @@ function makeCell(cell, index, boardId = activeId) {
   article.setAttribute("role", "group");
   article.setAttribute("aria-label", `${cell.label}. Posici?n ${index + 1} de 16.`);
   if (cell.imageData && !cell.normalized) normalizeStoredPng(cell);
-  article.innerHTML = `<img src="${cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id)}" alt="${escapeHtml(cell.label)}"><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validación" : "Validar"}</button><button data-action="edit-label">Editar nombre</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
+  article.innerHTML = `<img src="${cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id)}" alt="${escapeHtml(cell.label)}"><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validación" : "Validar"}</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
+  article.querySelector("strong").addEventListener("click", event => {
+    event.stopPropagation();
+    activeId = boardId;
+    document.querySelectorAll(".editor-cell.selected").forEach(item => item.classList.remove("selected"));
+    article.classList.add("selected");
+    editCellLabel(article, cell);
+  });
+  const label = article.querySelector("strong");
+  label.classList.add("cell-label");
+  label.tabIndex = 0;
+  label.setAttribute("role", "button");
+  label.setAttribute("aria-label", `Editar nombre: ${cell.label}`);
+  const startLabelEdit = event => {
+    event.preventDefault();
+    event.stopPropagation();
+    activeId = boardId;
+    document.querySelectorAll(".editor-cell.selected").forEach(item => item.classList.remove("selected"));
+    article.classList.add("selected");
+    editCellLabel(article, cell);
+  };
+  label.addEventListener("pointerup", startLabelEdit);
+  label.addEventListener("dblclick", startLabelEdit);
+  label.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") startLabelEdit(event);
+  });
   article.addEventListener("click", event => {
+    if (event.target.closest("strong")) {
+      startLabelEdit(event);
+      return;
+    }
     document.querySelectorAll(".editor-cell.selected").forEach(item => item.classList.remove("selected"));
     article.classList.add("selected");
     activeId = boardId;
     const action = event.target.dataset.action;
     if (action === "validate") { cell.validated = !cell.validated; markDirty(); save(); renderPage(); }
-    if (action === "edit-label") editCellLabel(article, cell);
     if (action === "replace") openPicker(index);
     if (action === "delete") { removeCellAndShift(index); markDirty(); save(); renderPage(); }
   });

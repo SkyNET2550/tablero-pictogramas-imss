@@ -2,12 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("el constructor permite agregar una página en blanco al tablero activo", async () => {
+test("el constructor permite agregar una página desde los controles de la página", async () => {
   const html = await readFile("index.html", "utf8");
   const editor = await readFile("src/board-editor.js", "utf8");
 
-  assert.match(html, /id="editor-add-blank-page"[^>]*>Agregar página en blanco/);
-  assert.match(editor, /function addBlankPage\(\)/);
+  assert.doesNotMatch(html, /editor-add-blank-page|Agregar página en blanco/);
+  assert.match(editor, /data-page-action="add">Agregar p.gina/);
+  assert.match(editor, /function addBlankPage\(sourceBoardId = activeId\)/);
+  assert.match(editor, /boards\.find\(item => item\.id === sourceBoardId\)/);
   assert.match(editor, /manualBlankPage:\s*true/);
   assert.match(editor, /semanticParentId:\s*root\.id/);
   assert.match(editor, /cells:\s*Array\(16\)\.fill\(null\)/);

@@ -2,16 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("los pictogramas muestran acciones verticales para validar, editar, sustituir y eliminar", async () => {
+test("los pictogramas muestran acciones verticales y editan la etiqueta desde el texto", async () => {
   const editor = await readFile("src/board-editor.js", "utf8");
   const styles = await readFile("styles/print-letter.css", "utf8");
 
   assert.match(editor, /data-action="validate"/);
-  assert.match(editor, /data-action="edit-label"/);
-  assert.match(editor, /Editar nombre/);
+  assert.doesNotMatch(editor, /data-action="edit-label"/);
+  assert.doesNotMatch(editor, />Editar nombre</);
   assert.match(editor, /function editCellLabel\(article, cell\)/);
   assert.match(editor, /cell-label-editor/);
   assert.match(editor, /label\.replaceWith\(input\)/);
+  assert.match(editor, /querySelector\("strong"\)\.addEventListener\("click"/);
   assert.doesNotMatch(editor, /prompt\("Editar nombre del pictograma"/);
   assert.match(editor, /data-action="replace"/);
   assert.match(editor, /data-action="delete"/);
@@ -27,8 +28,9 @@ test("los tableros semánticos se presentan como páginas secuenciales hacia aba
   assert.match(editor, /semanticSiblingBoards\(board\)/);
   assert.match(editor, /editor-page-sequence/);
   assert.match(editor, /makeBoardPage\(item, pageIndex, groupBoards\.length\)/);
-  assert.match(editor, /Validar página/);
-  assert.match(editor, /Eliminar página/);
+  assert.match(editor, /Validar p.gina/);
+  assert.match(editor, /Eliminar p.gina/);
+  assert.match(editor, /data-page-action="add">Agregar p.gina/);
   assert.match(styles, /\.editor-page-sequence \{[^}]*flex-direction: column/s);
 });
 
