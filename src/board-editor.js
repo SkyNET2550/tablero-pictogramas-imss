@@ -345,13 +345,14 @@ function makeCell(cell, index, boardId = activeId) {
   article.setAttribute("role", "group");
   article.setAttribute("aria-label", `${cell.label}. Posici?n ${index + 1} de 16.`);
   if (cell.imageData && !cell.normalized) normalizeStoredPng(cell);
-  article.innerHTML = `<img src="${cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id)}" alt="${escapeHtml(cell.label)}"><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validación" : "Validar"}</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
+  article.innerHTML = `<img src="${cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id)}" alt="${escapeHtml(cell.label)}"><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validación" : "Validar"}</button><button data-action="edit-label">Editar nombre</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
   article.addEventListener("click", event => {
     document.querySelectorAll(".editor-cell.selected").forEach(item => item.classList.remove("selected"));
     article.classList.add("selected");
     activeId = boardId;
     const action = event.target.dataset.action;
     if (action === "validate") { cell.validated = !cell.validated; markDirty(); save(); renderPage(); }
+    if (action === "edit-label") editCellLabel(cell);
     if (action === "replace") openPicker(index);
     if (action === "delete") { removeCellAndShift(index); markDirty(); save(); renderPage(); }
   });
@@ -374,6 +375,15 @@ function makeCell(cell, index, boardId = activeId) {
     moveSlot(draggedCell.boardId, draggedCell.index, boardId, index);
   });
   return article;
+}
+
+function editCellLabel(cell) {
+  const nextLabel = sentenceCase(prompt("Editar nombre del pictograma", cell.label) || "");
+  if (!nextLabel) return;
+  cell.label = nextLabel;
+  markDirty();
+  save();
+  renderPage();
 }
 
 function makeEmptySlot(index, boardId = activeId) {

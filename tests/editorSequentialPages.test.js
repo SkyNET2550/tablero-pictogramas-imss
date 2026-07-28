@@ -2,11 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("los pictogramas muestran solo acciones verticales de validar, sustituir y eliminar", async () => {
+test("los pictogramas muestran acciones verticales para validar, editar, sustituir y eliminar", async () => {
   const editor = await readFile("src/board-editor.js", "utf8");
   const styles = await readFile("styles/print-letter.css", "utf8");
 
   assert.match(editor, /data-action="validate"/);
+  assert.match(editor, /data-action="edit-label"/);
+  assert.match(editor, /Editar nombre/);
+  assert.match(editor, /function editCellLabel\(cell\)/);
   assert.match(editor, /data-action="replace"/);
   assert.match(editor, /data-action="delete"/);
   assert.doesNotMatch(editor, /data-action="left"/);
