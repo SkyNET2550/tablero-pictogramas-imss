@@ -21,3 +21,15 @@ test("el servidor genera PDF real y deja de exponer exportación JPG", async () 
   assert.match(exporter, /print-to-pdf/);
   assert.doesNotMatch(server, /api\/export\/jpg/);
 });
+
+test("la exportación Word conserva tamaño fijo de pictogramas", async () => {
+  const editor = await readFile("src/board-editor.js", "utf8");
+  const docx = await readFile("scripts/export-docx.cjs", "utf8");
+
+  assert.match(editor, /function makeWordCompatibleHtml\(board\)/);
+  assert.match(editor, /table-layout:fixed/);
+  assert.match(editor, /width="120" height="100"/);
+  assert.doesNotMatch(editor, /td img\{max-width|max-height:95pt/);
+  assert.match(docx, /HeightRule\.EXACT/);
+  assert.match(docx, /transformation:\s*\{\s*width:\s*105,\s*height:\s*95\s*\}/);
+});

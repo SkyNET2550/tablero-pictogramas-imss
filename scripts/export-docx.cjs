@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const modules = process.env.CODEX_NODE_MODULES;
-const { Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell, WidthType, AlignmentType, VerticalAlign, BorderStyle, PageOrientation } = require(path.join(modules, "docx"));
+const { Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell, WidthType, AlignmentType, VerticalAlign, BorderStyle, PageOrientation, HeightRule } = require(path.join(modules, "docx"));
 
 const [input, output, root] = process.argv.slice(2);
 const payload = JSON.parse(fs.readFileSync(input, "utf8"));
@@ -17,7 +17,7 @@ const rows = [];
 for (let r = 0; r < 4; r++) {
   const row = [];
   for (let c = 0; c < 4; c++) row.push(makeCell(cells[r * 4 + c]));
-  rows.push(new TableRow({ children: row, height: { value: 1700, rule: "atLeast" } }));
+  rows.push(new TableRow({ children: row, height: { value: 1550, rule: HeightRule.EXACT } }));
 }
 children.push(new Table({ rows, width: { size: 9360, type: WidthType.DXA }, columnWidths: [2340,2340,2340,2340] }));
 children.push(new Paragraph({ children: [new TextRun({ text: payload.footer, size: 9, color: "555555" })], alignment: AlignmentType.CENTER, spacing: { before: 80 } }));
@@ -28,8 +28,8 @@ function makeCell(cell) {
   const content = [];
   if (cell) {
     const data = loadImage(cell);
-    if (data) content.push(new Paragraph({ children: [new ImageRun({ data, transformation: { width: 130, height: 120 }, type: imageType(cell) })], alignment: AlignmentType.CENTER }));
-    content.push(new Paragraph({ children: [new TextRun({ text: cell.label, bold: true, size: 25 })], alignment: AlignmentType.CENTER }));
+    if (data) content.push(new Paragraph({ children: [new ImageRun({ data, transformation: { width: 105, height: 95 }, type: imageType(cell) })], alignment: AlignmentType.CENTER, spacing: { after: 20 } }));
+    content.push(new Paragraph({ children: [new TextRun({ text: cell.label, bold: true, size: 22 })], alignment: AlignmentType.CENTER, spacing: { before: 0, after: 0 } }));
   }
   return new TableCell({ children: content.length ? content : [new Paragraph("")], width: { size: 2340, type: WidthType.DXA }, verticalAlign: VerticalAlign.CENTER, margins: { top: 80, bottom: 80, left: 80, right: 80 }, borders: allBorders() });
 }
