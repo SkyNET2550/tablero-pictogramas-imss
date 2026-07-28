@@ -798,6 +798,7 @@ async function exportBinary(format) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ board, headerImage: BOARD_HEADER_IMAGE, footer: INSTITUTIONAL_FOOTER })
     });
+    if (!response.ok && (response.status === 404 || response.status === 405)) return exportInBrowser(format, board);
     if (!response.ok) throw new Error((await response.json()).error || `Error ${response.status}`);
     const blob = await response.blob();
     await saveWithNativeDialog(blob, `${safeName(board.title)}.${format}`, [{
@@ -813,6 +814,73 @@ async function exportBinary(format) {
     button.disabled = false;
     button.textContent = original;
   }
+}
+
+function exportFormatLabel(format) {
+  return format === "docx" ? "Word" : format === "pdf" ? "PDF" : "imagen";
+}
+
+async function exportInBrowser(format, board) {
+  if (format === "pdf") {
+    printBoard();
+    return true;
+  }
+  if (format === "docx") {
+    return saveWithBrowser(
+      new Blob([makeWordCompatibleHtml(board)], { type: "application/msword;charset=utf-8" }),
+      `${safeName(board.title)}-editable.doc`,
+      [{ description: "Documento de Word editable", accept: { "application/msword": [".doc"] } }]
+    );
+  }
+  return saveWithBrowser(
+    new Blob([await makeBoardSvgImage(board)], { type: "image/svg+xml;charset=utf-8" }),
+    `${safeName(board.title)}-imagen.svg`,
+    [{ description: "Imagen", accept: { "image/svg+xml": [".svg"] } }]
+  );
+}
+
+function makeWordCompatibleHtml(board) {
+  const cells = printableCells(board).map(cell => cell ? `<td><img src="${escapeHtml(cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id))}"><p>${escapeHtml(cell.label)}</p></td>` : "<td></td>");
+  const rows = [0, 4, 8, 12].map(start => `<tr>${cells.slice(start, start + 4).join("")}</tr>`).join("");
+  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:letter portrait;margin:.35in}body{font-family:Arial,sans-serif;color:#082f61}.brand{width:58%;height:.72in;object-fit:contain}h1{text-align:center;text-transform:uppercase;border-bottom:3px solid #0757a5;padding-bottom:8px}table{width:100%;border-collapse:separate;border-spacing:6px}td{width:25%;height:120pt;border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle}td img{max-width:95%;max-height:95pt}td p{margin:2pt 0 0;color:#111;font-weight:bold;font-size:14pt}footer{font-size:6pt;text-align:center;color:#555}</style></head><body><img class="brand" src="${BOARD_HEADER_IMAGE}"><p style="text-align:center;font-weight:bold;color:#004b93">TABLERO DE COMUNICACIÓN POR PICTOGRAMAS</p><h1>${escapeHtml(board.title)}</h1><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
+}
+
+async function makeBoardSvgImage(board) {
+  const cells = printableCells(board);
+  const cardWidth = 170;
+  const cardHeight = 155;
+  const gap = 8;
+  const left = 45;
+  const top = 210;
+  const parts = [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="816" height="1056" viewBox="0 0 816 1056">`,
+    `<rect width="816" height="1056" fill="#fff"/>`,
+    `<text x="408" y="150" text-anchor="middle" font-family="Arial" font-size="17" font-weight="700" fill="#004b93">TABLERO DE COMUNICACIÓN POR PICTOGRAMAS</text>`,
+    `<rect x="163" y="162" width="490" height="3" fill="#004b93"/>`,
+    `<text x="408" y="195" text-anchor="middle" font-family="Arial" font-size="30" font-weight="800" fill="#004b93">${escapeSvg(board.title.toUpperCase())}</text>`
+  ];
+  cells.forEach((cell, index) => {
+    const col = index % 4;
+    const row = Math.floor(index / 4);
+    const x = left + col * (cardWidth + gap);
+    const y = top + row * (cardHeight + gap);
+    parts.push(`<rect x="${x}" y="${y}" width="${cardWidth}" height="${cardHeight}" rx="10" fill="#fff" stroke="#0757a5" stroke-width="2.5"/>`);
+    if (cell) {
+      const href = escapeSvg(cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id));
+      parts.push(`<image href="${href}" x="${x + 10}" y="${y + 8}" width="${cardWidth - 20}" height="${cardHeight - 42}" preserveAspectRatio="xMidYMid meet"/>`);
+      parts.push(`<text x="${x + cardWidth / 2}" y="${y + cardHeight - 15}" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#111">${escapeSvg(cell.label)}</text>`);
+    }
+  });
+  parts.push(`<text x="408" y="1030" text-anchor="middle" font-family="Arial" font-size="6" fill="#555">${escapeSvg(INSTITUTIONAL_FOOTER)}</text></svg>`);
+  return parts.join("");
+}
+
+function printableCells(board) {
+  return Array.from({ length: 16 }, (_, index) => board.cells?.[index] || null);
+}
+
+function escapeSvg(value = "") {
+  return String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[character]);
 }
 async function exportBoardHtml() {
   const board = activeBoard();
