@@ -5,6 +5,7 @@ import { searchAllProviders } from "./providers/provider-registry.js";
 import { deduplicatePictograms, hasPictogramDuplicate, removeBoardDuplicates } from "./pictogram-identity.js";
 
 const STORAGE_KEY = "arasaac-custom-boards-v1";
+const AUTOSAVE_KEY = "arasaac-custom-boards-autosave-v1";
 const editor = document.querySelector("#board-editor");
 const picker = document.querySelector("#pictogram-picker");
 const page = document.querySelector("#editor-page");
@@ -14,7 +15,7 @@ const semanticDialog = document.querySelector("#editor-semantic-dialog");
 let boards = loadBoards();
 let activeId = boards[0].id;
 let replaceIndex = null;
-let draggedIndex = null;
+let draggedCell = null;
 let selectedPickerId = null;
 let selectedPickerImage = null;
 let externalSelection = null;
@@ -48,6 +49,7 @@ export function initBoardEditor() {
   });
   document.querySelector("#back-to-results-button").addEventListener("click", showPickerResults);
   document.querySelector("#confirm-pictogram-button").addEventListener("click", confirmPictogram);
+  document.querySelector("#editor-add-blank-page").addEventListener("click", addBlankPage);
   document.querySelector("#editor-add-semantic-group").addEventListener("click", openEditorSemanticDialog);
   document.querySelector("#close-editor-semantic").addEventListener("click", () => semanticDialog.close());
   document.querySelector("#clear-editor-semantic").addEventListener("click", () => {
@@ -57,6 +59,7 @@ export function initBoardEditor() {
   });
   document.querySelector("#editor-semantic-form").addEventListener("submit", addSemanticGroupToEditor);
   titleInput.addEventListener("input", updateProperties);
+  setInterval(autosaveCurrentEditor, 60000);
   window.addEventListener("afterprint", () => document.body.classList.remove("print-editor"));
 }
 
@@ -120,10 +123,40 @@ function normalizeBoard(board) {
 }
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(boards)); }
 function markDirty() { editorDirty = true; }
+function autosaveCurrentEditor() {
+  if (!editor.open || !editorDirty) return;
+  localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
+    savedAt: new Date().toISOString(),
+    activeId,
+    boards
+  }));
+  save();
+}
 
 function createBoard() {
   const board = { id: uid(), title: `Tablero ${boards.length + 1}`, cells: Array(16).fill(null) };
   boards.push(board); activeId = board.id; markDirty(); save(); render();
+}
+function addBlankPage() {
+  const board = activeBoard();
+  const root = rootBoardFor(board);
+  const rootId = root.semanticRootId || root.id;
+  root.semanticRootId = rootId;
+  const newPage = {
+    id: uid(),
+    title: root.title,
+    semanticParentId: root.id,
+    semanticRootId: rootId,
+    semanticGenerated: Boolean(root.semanticGenerated),
+    manualBlankPage: true,
+    semanticPage: semanticSiblingBoards(root).length + 1,
+    cells: Array(16).fill(null)
+  };
+  boards.push(newPage);
+  activeId = newPage.id;
+  markDirty();
+  save();
+  render();
 }
 function deleteBoard() {
   if (boards.length === 1) {
@@ -250,6 +283,11 @@ function semanticSiblingBoards(board) {
   return boards.filter(item => (item.semanticRootId || item.semanticParentId || item.id) === rootId);
 }
 
+function rootBoardFor(board) {
+  const rootId = board.semanticRootId || board.semanticParentId || board.id;
+  return boards.find(item => item.id === rootId) || board;
+}
+
 function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
   const wrapper = document.createElement("section");
   wrapper.className = "editor-page-sheet";
@@ -317,7 +355,10 @@ function makeCell(cell, index, boardId = activeId) {
     if (action === "replace") openPicker(index);
     if (action === "delete") { removeCellAndShift(index); markDirty(); save(); renderPage(); }
   });
-  article.addEventListener("dragstart", () => { activeId = boardId; draggedIndex = index; });
+  article.addEventListener("dragstart", () => {
+    activeId = boardId;
+    draggedCell = { boardId, index };
+  });
   article.addEventListener("keydown", event => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -329,9 +370,8 @@ function makeCell(cell, index, boardId = activeId) {
   article.addEventListener("dragover", event => event.preventDefault());
   article.addEventListener("drop", event => {
     event.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-    activeId = boardId;
-    swapSlots(draggedIndex, index);
+    if (!draggedCell || (draggedCell.boardId === boardId && draggedCell.index === index)) return;
+    moveSlot(draggedCell.boardId, draggedCell.index, boardId, index);
   });
   return article;
 }
@@ -352,7 +392,7 @@ function makeEmptySlot(index, boardId = activeId) {
   empty.addEventListener("drop", event => {
     event.preventDefault();
     empty.classList.remove("drag-target");
-    if (draggedIndex !== null) { activeId = boardId; swapSlots(draggedIndex, index); }
+    if (draggedCell) moveSlot(draggedCell.boardId, draggedCell.index, boardId, index);
   });
   return empty;
 }
@@ -361,9 +401,27 @@ function swapSlots(from, to) {
   if (from === null || from === to) return;
   const cells = activeBoard().cells;
   [cells[from], cells[to]] = [cells[to], cells[from]];
-  draggedIndex = null;
+  draggedCell = null;
   markDirty(); save();
   renderPage();
+}
+
+function moveSlot(fromBoardId, fromIndex, toBoardId, toIndex) {
+  const fromBoard = boards.find(board => board.id === fromBoardId);
+  const toBoard = boards.find(board => board.id === toBoardId);
+  if (!fromBoard || !toBoard) return;
+  if (fromBoardId === toBoardId) {
+    activeId = toBoardId;
+    swapSlots(fromIndex, toIndex);
+    return;
+  }
+  [fromBoard.cells[fromIndex], toBoard.cells[toIndex]] = [toBoard.cells[toIndex], fromBoard.cells[fromIndex]];
+  draggedCell = null;
+  activeId = toBoardId;
+  markDirty();
+  save();
+  renderPage();
+  renderList();
 }
 
 function removeCellAndShift(index) {
