@@ -9,7 +9,10 @@ test("los pictogramas muestran acciones verticales para validar, editar, sustitu
   assert.match(editor, /data-action="validate"/);
   assert.match(editor, /data-action="edit-label"/);
   assert.match(editor, /Editar nombre/);
-  assert.match(editor, /function editCellLabel\(cell\)/);
+  assert.match(editor, /function editCellLabel\(article, cell\)/);
+  assert.match(editor, /cell-label-editor/);
+  assert.match(editor, /label\.replaceWith\(input\)/);
+  assert.doesNotMatch(editor, /prompt\("Editar nombre del pictograma"/);
   assert.match(editor, /data-action="replace"/);
   assert.match(editor, /data-action="delete"/);
   assert.doesNotMatch(editor, /data-action="left"/);

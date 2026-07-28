@@ -182,6 +182,8 @@ dialog::backdrop { background: #001b31cc; }
 .editor-cell.validated::after { content: "âœ“"; position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; color: #fff; background: #17833b; font-weight: 900; }
 .editor-cell img { width: 100%; height: 112px; padding: 0; object-fit: contain; object-position: center; }
 .editor-cell strong { text-align: center; }
+.editor-cell.editing-label .cell-actions { display: none; }
+.cell-label-editor { width: 100%; min-height: 30px; padding: 3px 5px; border: 2px solid #f6b400; border-radius: 6px; font: 700 13px Arial, sans-serif; text-align: center; }
 .cell-actions { position: absolute; inset: 0; display: none; flex-direction: column; align-items: stretch; justify-content: center; gap: 5px; padding: 8px; background: #ffffffed; }
 .editor-cell.selected .cell-actions { display: flex; }
 .cell-actions button { min-height: 30px; padding: 4px 7px; border-color: #789; font-size: 12px; width: 100%; }

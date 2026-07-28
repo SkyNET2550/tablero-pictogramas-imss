@@ -352,7 +352,7 @@ function makeCell(cell, index, boardId = activeId) {
     activeId = boardId;
     const action = event.target.dataset.action;
     if (action === "validate") { cell.validated = !cell.validated; markDirty(); save(); renderPage(); }
-    if (action === "edit-label") editCellLabel(cell);
+    if (action === "edit-label") editCellLabel(article, cell);
     if (action === "replace") openPicker(index);
     if (action === "delete") { removeCellAndShift(index); markDirty(); save(); renderPage(); }
   });
@@ -377,13 +377,39 @@ function makeCell(cell, index, boardId = activeId) {
   return article;
 }
 
-function editCellLabel(cell) {
-  const nextLabel = sentenceCase(prompt("Editar nombre del pictograma", cell.label) || "");
-  if (!nextLabel) return;
-  cell.label = nextLabel;
-  markDirty();
-  save();
-  renderPage();
+function editCellLabel(article, cell) {
+  const label = article.querySelector("strong");
+  if (!label || article.querySelector(".cell-label-editor")) return;
+  article.classList.add("editing-label");
+  const input = document.createElement("input");
+  input.className = "cell-label-editor";
+  input.type = "text";
+  input.value = cell.label;
+  input.setAttribute("aria-label", "Editar nombre del pictograma");
+  label.replaceWith(input);
+  input.focus();
+  input.select();
+  const finish = saveEdit => {
+    if (saveEdit) {
+      const nextLabel = sentenceCase(input.value);
+      if (nextLabel) cell.label = nextLabel;
+    }
+    markDirty();
+    save();
+    renderPage();
+  };
+  input.addEventListener("click", event => event.stopPropagation());
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      finish(true);
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      finish(false);
+    }
+  });
+  input.addEventListener("blur", () => finish(true), { once: true });
 }
 
 function makeEmptySlot(index, boardId = activeId) {
