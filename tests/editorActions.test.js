@@ -28,8 +28,10 @@ test("la exportación Word conserva tamaño fijo de pictogramas", async () => {
 
   assert.match(editor, /function makeWordCompatibleHtml\(board\)/);
   assert.match(editor, /table-layout:fixed/);
-  assert.match(editor, /width="120" height="100"/);
+  assert.match(editor, /width="132" height="118"/);
+  assert.match(editor, /margin:\.22in \.34in \.25in/);
   assert.doesNotMatch(editor, /td img\{max-width|max-height:95pt/);
   assert.match(docx, /HeightRule\.EXACT/);
-  assert.match(docx, /transformation:\s*\{\s*width:\s*105,\s*height:\s*95\s*\}/);
+  assert.match(docx, /TABLE_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT/);
+  assert.match(docx, /transformation:\s*\{\s*width:\s*132,\s*height:\s*118\s*\}/);
 });
