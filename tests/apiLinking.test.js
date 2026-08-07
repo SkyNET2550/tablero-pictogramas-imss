@@ -17,7 +17,9 @@ test("Servicios API permite vincular sin guardar credenciales en el navegador", 
   const client = await readFile("src/api-status.js", "utf8");
   const server = await readFile("scripts/server.js", "utf8");
   assert.match(html, /id="api-link-dialog"/);
-  assert.match(client, />Vincular</);
+  assert.match(client, /link\.textContent = "Vincular"/);
+  assert.match(client, /message\.textContent/);
+  assert.doesNotMatch(client, /row\.innerHTML/);
   assert.match(client, /api\/providers\/\$\{id\}\/connect/);
   assert.doesNotMatch(client, /localStorage.*apiKey|localStorage.*password/);
   assert.match(server, /\/api\\\/providers\\\/\[\^\/\]\+\\\/connect\$/);

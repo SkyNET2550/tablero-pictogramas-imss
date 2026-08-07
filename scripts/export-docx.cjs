@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 
-const modules = process.env.CODEX_NODE_MODULES;
 const {
   Document,
   Packer,
@@ -17,7 +16,7 @@ const {
   BorderStyle,
   PageOrientation,
   HeightRule
-} = require(path.join(modules, "docx"));
+} = require("docx");
 
 const [input, output, root] = process.argv.slice(2);
 const payload = JSON.parse(fs.readFileSync(input, "utf8").replace(/^\uFEFF/, ""));

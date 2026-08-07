@@ -8,8 +8,9 @@ Publicar el generador de tableros de comunicación alternativa por pictogramas p
 
 - El proyecto puede versionarse con Git.
 - Se excluyen carpetas temporales, respaldos, cachés, salidas y la carpeta `Guardados`.
-- Se agregó configuración básica de Vercel.
-- La validación configurada para despliegue ejecuta `npm test`.
+- Vercel publica la aplicación estática y las funciones de `api/`.
+- La validación de despliegue ejecuta `npm run validate`.
+- GitHub Actions ejecuta validación, pruebas de navegador y auditoría de dependencias.
 
 ## Paso 1. Crear repositorio en GitHub
 
@@ -45,7 +46,7 @@ Opción recomendada:
 4. Importar el repositorio de GitHub.
 5. Mantener:
    - Framework Preset: `Other`
-   - Build Command: `npm test`
+   - Build Command: `npm run validate`
    - Output Directory: `.`
 6. Deploy.
 
@@ -61,6 +62,8 @@ Si se usan proveedores externos con credenciales, agregarlas en Vercel > Project
 - `OPENSYMBOLS_USERNAME`
 - `SYMBOTALK_API_KEY`
 - `SYMBOTALK_USERNAME`
+- `ENABLE_MONITORING=true`, si se autoriza el registro de diagnósticos mínimos.
+- `ENABLE_CLOUD_STORAGE=true` y `BLOB_READ_WRITE_TOKEN`, únicamente después de crear un almacén Blob privado y aprobar la política de datos.
 
 ## Nota importante sobre funciones locales
 
@@ -70,13 +73,14 @@ Algunas funciones fueron diseñadas para ejecución local en Windows, especialme
 - Guardado directo en la carpeta local `Guardados`.
 - Exportación local mediante scripts del equipo.
 
-En Vercel esas funciones deberán operar como descarga del navegador o como almacenamiento en nube. La interfaz web y búsqueda pueden publicarse, pero la persistencia local de Windows no existe dentro de Vercel.
+En Vercel, guardar y abrir utilizan el navegador e IndexedDB. PDF recurre a impresión, Word a un documento HTML editable y la imagen a SVG cuando el exportador del servidor no está disponible. Los diálogos nativos de Windows se mantienen exclusivamente en la edición local.
 
 ## Recomendación de siguiente fase
 
 Para una versión completamente institucional en línea:
 
-1. Sustituir los cuadros nativos de Windows por descargas web.
-2. Guardar tableros editables en una base de datos o almacenamiento institucional.
-3. Convertir las rutas `/api` a funciones serverless compatibles con Vercel.
-4. Definir si el repositorio será público, privado o interno.
+1. Ejecutar `npm run release:check` y atender los bloqueos.
+2. Validar los ocho pictogramas pendientes.
+3. Completar pruebas con lectores de pantalla y personas usuarias.
+4. Obtener autorización jurídica e institucional.
+5. Activar almacenamiento privado sólo cuando exista una política de datos aprobada.

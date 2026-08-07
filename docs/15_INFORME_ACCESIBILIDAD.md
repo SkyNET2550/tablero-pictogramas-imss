@@ -1,22 +1,27 @@
 # Informe de accesibilidad
 
-Fecha: 2026-06-19T20:01:17.765Z
+Fecha: 2026-08-05T04:47:54.043Z
 
 Resultado automatizado: **APROBADO**
 
 - [x] languageDeclared
-- [x] skipLink
-- [x] mainLandmark
+- [x] viewportDeclared
+- [x] skipLinkTargetsMain
+- [x] uniqueIds
 - [x] imageAlternatives
-- [x] visibleFocus
-- [x] printLetter
-- [x] keyboardCellMovement
-- [x] noColorOnly
+- [x] labelledDialogs
 - [x] liveRegions
+- [x] visibleFocus
+- [x] reducedMotion
+- [x] forcedColors
+- [x] dialogFocusRestoration
+- [x] keyboardCellMovement
+- [x] noMojibake
 
-## Validaciones manuales complementarias
+## Validaciones manuales pendientes
 
-- Lector de pantalla NVDA/JAWS
-- Contraste con herramientas WCAG
-- Prueba con usuarios CAA
-- Orden de foco en todos los diálogos
+- NVDA y JAWS
+- Contraste WCAG medido
+- Zoom 200 % y 400 %
+- Prueba táctil
+- Prueba con personas usuarias de CAA

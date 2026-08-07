@@ -1,12 +1,13 @@
 const fs = require("fs");
 const path = require("path");
-const { execFileSync } = require("child_process");
 const os = require("os");
+const { pathToFileURL } = require("url");
+const { chromium } = require("playwright");
 const [input, output, root] = process.argv.slice(2);
 const payload = JSON.parse(fs.readFileSync(input, "utf8"));
 const board = payload.board;
 
-(() => {
+(async () => {
   const cells = [...board.cells];
   while (cells.length < 16) cells.push(null);
   const cards = cells.map(cell => cell ? `<article class="cell"><img src="${resolveImage(cell)}"><strong>${esc(cell.label)}</strong></article>` : `<article class="cell empty"></article>`).join("");
@@ -20,10 +21,16 @@ const board = payload.board;
   <section class="page">${header ? `<img class="brand" src="${header}">` : ""}<div class="k">TABLERO DE COMUNICACIÓN POR PICTOGRAMAS</div><div class="rule"></div><h1 class="title">${esc(board.title.toUpperCase())}</h1><main class="grid">${cards}</main><footer>${esc(payload.footer)}</footer></section></body></html>`;
   const tempHtml = path.join(os.tmpdir(), `board-${Date.now()}.html`);
   fs.writeFileSync(tempHtml, html);
-  const chrome = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-  execFileSync(chrome, ["--headless", "--disable-gpu", "--hide-scrollbars", "--window-size=816,1056", "--force-device-scale-factor=2", `--screenshot=${output}`, `file:///${tempHtml.replace(/\\/g,"/")}`], { timeout: 120000, stdio: "pipe" });
-  fs.unlinkSync(tempHtml);
-})();
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 816, height: 1056 }, deviceScaleFactor: 2 });
+    await page.goto(pathToFileURL(tempHtml).href, { waitUntil: "networkidle" });
+    await page.screenshot({ path: output, fullPage: false });
+  } finally {
+    await browser.close();
+    fs.rmSync(tempHtml, { force: true });
+  }
+})().catch(error => { throw error; });
 
 function resolveImage(cell) {
   if (cell.imageData) return cell.imageData;

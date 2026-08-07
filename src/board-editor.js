@@ -3,6 +3,9 @@ import { getPictogramImageUrl } from "./arasaac-api.js";
 import { BOARD_HEADER_IMAGE, BOARD_INSTITUTION_LINES, institutionalHeaderHtml } from "./board-branding.js";
 import { searchAllProviders } from "./providers/provider-registry.js";
 import { deduplicatePictograms, hasPictogramDuplicate, removeBoardDuplicates } from "./pictogram-identity.js";
+import { closeAccessibleDialog, installDialogFocusManagement, showAccessibleDialog } from "./dialog-focus.js";
+import { setSafeImage } from "./security.js";
+import { loadBoardsFromBrowser, saveBoardsToBrowser } from "./browser-storage.js";
 
 const STORAGE_KEY = "arasaac-custom-boards-v1";
 const AUTOSAVE_KEY = "arasaac-custom-boards-autosave-v1";
@@ -25,6 +28,7 @@ let editorSessionSnapshot = null;
 const semanticDraftSnapshots = new Map();
 
 export function initBoardEditor() {
+  [editor, picker, semanticDialog].forEach(installDialogFocusManagement);
   document.querySelector("#open-editor-button").addEventListener("click", openEditor);
   document.querySelector("#close-editor-button").addEventListener("click", requestEditorClose);
   editor.addEventListener("cancel", event => {
@@ -34,7 +38,7 @@ export function initBoardEditor() {
   });
   document.querySelector("#new-board-button").addEventListener("click", createBoard);
   document.querySelector("#delete-board-button").addEventListener("click", deleteBoard);
-  document.querySelector("#close-picker-button").addEventListener("click", () => picker.close());
+  document.querySelector("#close-picker-button").addEventListener("click", () => closeAccessibleDialog(picker));
   document.querySelector("#print-current-button").addEventListener("click", printBoard);
   document.querySelector("#export-pdf-button").addEventListener("click", () => exportBinary("pdf"));
   document.querySelector("#export-docx-button").addEventListener("click", () => exportBinary("docx"));
@@ -50,7 +54,7 @@ export function initBoardEditor() {
   document.querySelector("#back-to-results-button").addEventListener("click", showPickerResults);
   document.querySelector("#confirm-pictogram-button").addEventListener("click", confirmPictogram);
   document.querySelector("#editor-add-semantic-group").addEventListener("click", openEditorSemanticDialog);
-  document.querySelector("#close-editor-semantic").addEventListener("click", () => semanticDialog.close());
+  document.querySelector("#close-editor-semantic").addEventListener("click", () => closeAccessibleDialog(semanticDialog));
   document.querySelector("#clear-editor-semantic").addEventListener("click", () => {
     document.querySelector("#editor-semantic-terms").value = "";
     document.querySelector("#editor-semantic-status").textContent = "";
@@ -60,13 +64,14 @@ export function initBoardEditor() {
   titleInput.addEventListener("input", updateProperties);
   setInterval(autosaveCurrentEditor, 60000);
   window.addEventListener("afterprint", () => document.body.classList.remove("print-editor"));
+  void restoreIndexedBoards();
 }
 
-function openEditor() {
+function openEditor(event) {
   editorSessionSnapshot = { boards: structuredClone(boards), activeId };
   editorDirty = false;
   render();
-  editor.showModal();
+  showAccessibleDialog(editor, { opener: event?.currentTarget, focus: "#editor-title" });
 }
 
 export function openPredefinedBoardEditor(predefinedBoard) {
@@ -87,7 +92,7 @@ export function openPredefinedBoardEditor(predefinedBoard) {
   render();
   editorSessionSnapshot = { boards: structuredClone(boards), activeId };
   editorDirty = false;
-  editor.showModal();
+  showAccessibleDialog(editor, { opener: document.activeElement, focus: "#editor-title" });
 }
 
 export function choosePictogramForConcept({ term, groupId, onSelected }) {
@@ -95,6 +100,8 @@ export function choosePictogramForConcept({ term, groupId, onSelected }) {
   replaceIndex = null;
   document.querySelector("#picker-query").value = term;
   document.querySelector("#picker-label").value = "";
+  document.querySelector("#picker-author").value = "";
+  document.querySelector("#picker-license").value = "";
   document.querySelector("#picker-results").replaceChildren();
   document.querySelector("#picker-results").hidden = false;
   document.querySelector("#picker-confirmation").hidden = true;
@@ -102,8 +109,7 @@ export function choosePictogramForConcept({ term, groupId, onSelected }) {
   selectedPickerId = null;
   selectedPickerImage = null;
   document.querySelector("#png-file-input").value = "";
-  picker.showModal();
-  document.querySelector("#picker-query").focus();
+  showAccessibleDialog(picker, { opener: document.activeElement, focus: "#picker-query" });
 }
 
 function activeBoard() { return boards.find(board => board.id === activeId); }
@@ -120,7 +126,18 @@ function normalizeBoard(board) {
   while (cells.length < 16) cells.push(null);
   return { ...board, cells: removeBoardDuplicates(cells) };
 }
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(boards)); }
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(boards)); } catch {}
+  void saveBoardsToBrowser(boards).catch(() => {});
+}
+async function restoreIndexedBoards() {
+  if (localStorage.getItem(STORAGE_KEY)) return;
+  try {
+    const restored = await loadBoardsFromBrowser();
+    if (!Array.isArray(restored) || !restored.length) return;
+    boards = restored.map(normalizeBoard); activeId = boards[0].id; render();
+  } catch {}
+}
 function markDirty() { editorDirty = true; }
 function autosaveCurrentEditor() {
   if (!editor.open || !editorDirty) return;
@@ -180,8 +197,7 @@ function updateProperties() {
 function openEditorSemanticDialog() {
   document.querySelector("#editor-semantic-terms").value = "";
   document.querySelector("#editor-semantic-status").textContent = "";
-  semanticDialog.showModal();
-  document.querySelector("#editor-semantic-terms").focus();
+  showAccessibleDialog(semanticDialog, { opener: document.activeElement, focus: "#editor-semantic-terms" });
 }
 
 async function addSemanticGroupToEditor(event) {
@@ -244,7 +260,7 @@ async function addSemanticGroupToEditor(event) {
   activeId = base.id;
   semanticDraftDirty = true;
   save();
-  semanticDialog.close();
+  closeAccessibleDialog(semanticDialog);
   render();
 }
 
@@ -342,10 +358,12 @@ function makeCell(cell, index, boardId = activeId) {
   article.className = `editor-cell${cell.validated ? " validated" : ""}`;
   article.draggable = true;
   article.tabIndex = 0;
+  article.dataset.index = index;
   article.setAttribute("role", "group");
-  article.setAttribute("aria-label", `${cell.label}. Posici?n ${index + 1} de 16.`);
+  article.setAttribute("aria-label", `${cell.label}. Posición ${index + 1} de 16.`);
   if (cell.imageData && !cell.normalized) normalizeStoredPng(cell);
-  article.innerHTML = `<img src="${cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id)}" alt="${escapeHtml(cell.label)}"><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validación" : "Validar"}</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
+  article.innerHTML = `<img alt=""><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validación" : "Validar"}</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
+  setSafeImage(article.querySelector("img"), cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id), cell.label);
   article.querySelector("strong").addEventListener("click", event => {
     event.stopPropagation();
     activeId = boardId;
@@ -389,6 +407,7 @@ function makeCell(cell, index, boardId = activeId) {
     draggedCell = { boardId, index };
   });
   article.addEventListener("keydown", event => {
+    if (handleGridArrowNavigation(event, index)) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       document.querySelectorAll(".editor-cell.selected").forEach(item => item.classList.remove("selected"));
@@ -445,9 +464,10 @@ function makeEmptySlot(index, boardId = activeId) {
   empty.type = "button";
   empty.className = "empty-slot";
   empty.dataset.index = index;
-  empty.setAttribute("aria-label", `Agregar pictograma en la posici?n ${index + 1} de 16`);
+  empty.setAttribute("aria-label", `Agregar pictograma en la posición ${index + 1} de 16`);
   empty.innerHTML = "<span>+ Agregar<br>pictograma</span>";
   empty.addEventListener("click", () => { activeId = boardId; openPicker(index); });
+  empty.addEventListener("keydown", event => handleGridArrowNavigation(event, index));
   empty.addEventListener("dragover", event => {
     event.preventDefault();
     empty.classList.add("drag-target");
@@ -459,6 +479,16 @@ function makeEmptySlot(index, boardId = activeId) {
     if (draggedCell) moveSlot(draggedCell.boardId, draggedCell.index, boardId, index);
   });
   return empty;
+}
+
+function handleGridArrowNavigation(event, index) {
+  const offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -4, ArrowDown: 4 };
+  if (!(event.key in offsets)) return false;
+  const next = index + offsets[event.key];
+  if (next < 0 || next > 15 || (event.key === "ArrowLeft" && index % 4 === 0) || (event.key === "ArrowRight" && index % 4 === 3)) return false;
+  event.preventDefault();
+  page.querySelector(`[data-index="${next}"]`)?.focus();
+  return true;
 }
 
 function swapSlots(from, to) {
@@ -499,6 +529,8 @@ function openPicker(index) {
   replaceIndex = index;
   document.querySelector("#picker-query").value = index === null || !activeBoard().cells[index] ? "" : activeBoard().cells[index].label;
   document.querySelector("#picker-label").value = "";
+  document.querySelector("#picker-author").value = "";
+  document.querySelector("#picker-license").value = "";
   document.querySelector("#picker-results").replaceChildren();
   document.querySelector("#picker-results").hidden = false;
   document.querySelector("#picker-confirmation").hidden = true;
@@ -506,8 +538,7 @@ function openPicker(index) {
   selectedPickerImage = null;
   document.querySelector("#png-file-input").value = "";
   document.querySelector("#picker-status").textContent = "Escribe un concepto para ver alternativas.";
-  picker.showModal();
-  document.querySelector("#picker-query").focus();
+  showAccessibleDialog(picker, { opener: document.activeElement, focus: "#picker-query" });
 }
 async function searchPicker(event) {
   event.preventDefault();
@@ -523,7 +554,8 @@ async function searchPicker(event) {
       const source = `${providerName(result.provider)}${result.providerOriginal ? ` · ${sentenceCase(result.providerOriginal)}` : ""}`;
       const card = document.createElement("article");
       card.className = "picker-card";
-      card.innerHTML = `<img src="${result.imageUrl}" alt="${escapeHtml(keywords)}"><p>${escapeHtml(keywords)}</p><small>${escapeHtml(source)}</small><button type="button">Elegir esta imagen</button>`;
+      card.innerHTML = `<img alt=""><p>${escapeHtml(keywords)}</p><small>${escapeHtml(source)}</small><button type="button">Elegir esta imagen</button>`;
+      setSafeImage(card.querySelector("img"), result.imageUrl, keywords);
       card.querySelector("button").addEventListener("click", () => selectPickerResult(result));
       resultsBox.append(card);
     });
@@ -532,9 +564,10 @@ async function searchPicker(event) {
 function selectPickerResult(result) {
   selectedPickerId = result;
   selectedPickerImage = null;
-  document.querySelector("#selected-pictogram-image").src = result.imageUrl;
-  document.querySelector("#selected-pictogram-image").alt = result.label;
+  setSafeImage(document.querySelector("#selected-pictogram-image"), result.imageUrl, result.label);
   document.querySelector("#picker-label").value = sentenceCase(replaceIndex === null || !activeBoard().cells[replaceIndex] ? result.label.split(",")[0] : activeBoard().cells[replaceIndex].label);
+  document.querySelector("#picker-author").value = result.author || result.attribution || result.providerOriginal || result.provider || "";
+  document.querySelector("#picker-license").value = result.license || "";
   document.querySelector("#picker-results").hidden = true;
   document.querySelector("#picker-confirmation").hidden = false;
   document.querySelector("#picker-status").textContent = "Imagen seleccionada. Ahora escribe la etiqueta conveniente.";
@@ -544,6 +577,8 @@ function selectPickerResult(result) {
 function selectPngFile(event) {
   const file = event.target.files?.[0];
   if (!file) return;
+  selectedPickerId = null;
+  selectedPickerImage = null;
   if (file.type !== "image/png" && !file.name.toLowerCase().endsWith(".png")) {
     document.querySelector("#picker-status").textContent = "El archivo debe estar en formato PNG.";
     event.target.value = "";
@@ -559,14 +594,26 @@ function selectPngFile(event) {
       preview.src = selectedPickerImage;
       preview.alt = file.name.replace(/\.png$/i, "");
       document.querySelector("#picker-label").value = sentenceCase(file.name.replace(/\.png$/i, "").replace(/[-_]+/g, " "));
+      document.querySelector("#picker-author").value = "Imagen proporcionada por la persona usuaria";
+      document.querySelector("#picker-license").value = "Uso autorizado para este tablero";
       document.querySelector("#picker-results").hidden = true;
       document.querySelector("#picker-confirmation").hidden = false;
       document.querySelector("#picker-status").textContent = "PNG preparado. Ahora escribe la etiqueta conveniente.";
       document.querySelector("#picker-label").focus();
       document.querySelector("#picker-label").select();
     });
+    image.addEventListener("error", () => {
+      selectedPickerImage = null;
+      document.querySelector("#picker-status").textContent = "No fue posible leer la imagen PNG. Verifica que el archivo no esté dañado.";
+      event.target.value = "";
+    }, { once: true });
     image.src = reader.result;
   });
+  reader.addEventListener("error", () => {
+    selectedPickerImage = null;
+    document.querySelector("#picker-status").textContent = "No fue posible cargar el archivo PNG.";
+    event.target.value = "";
+  }, { once: true });
   reader.readAsDataURL(file);
 }
 function fitPngToPictogram(image) {
@@ -632,14 +679,21 @@ function confirmPictogram() {
     document.querySelector("#picker-label").focus();
     return;
   }
+  const author = document.querySelector("#picker-author").value.trim();
+  const license = document.querySelector("#picker-license").value.trim();
+  if (selectedPickerImage && (!author || !license)) {
+    document.querySelector("#picker-status").textContent = "Indica la autoría o procedencia y el permiso de uso de la imagen.";
+    document.querySelector(author ? "#picker-license" : "#picker-author").focus();
+    return;
+  }
   const selection = selectedPickerImage
-    ? { imageData: selectedPickerImage, label, source: "Imagen PNG local" }
+    ? { imageData: selectedPickerImage, label, source: "Imagen PNG local", author, license, attribution: `${author} — ${license}` }
     : { id: selectedPickerId.remoteId, imageUrl: selectedPickerId.imageUrl, label, source: providerName(selectedPickerId.provider), provider: selectedPickerId.provider, providerOriginal: selectedPickerId.providerOriginal, license: selectedPickerId.license, author: selectedPickerId.author, attribution: selectedPickerId.attribution };
   if (externalSelection) {
     saveConceptSelection(externalSelection.term, selection);
     externalSelection.onSelected?.(selection);
     externalSelection = null;
-    picker.close();
+    closeAccessibleDialog(picker);
     return;
   }
   choosePictogram(selection);
@@ -655,11 +709,11 @@ function choosePictogram(selection) {
     if (emptyIndex < 0) return;
     activeBoard().cells[emptyIndex] = cell;
   } else activeBoard().cells[replaceIndex] = cell;
-  markDirty(); save(); renderPage(); picker.close();
+  markDirty(); save(); renderPage(); closeAccessibleDialog(picker);
 }
 async function requestEditorClose() {
   if (!semanticDraftDirty && !editorDirty) {
-    editor.close();
+    closeAccessibleDialog(editor);
     return;
   }
   const saveBeforeClose = confirm("Hay cambios no guardados en el tablero. Acepta para guardar antes de salir. Cancela para salir sin guardar y eliminar lo realizado en esta sesión.");
@@ -670,7 +724,7 @@ async function requestEditorClose() {
   } else {
     discardEditorSession();
   }
-  editor.close();
+  closeAccessibleDialog(editor);
 }
 
 function discardEditorSession() {
@@ -798,7 +852,7 @@ async function exportBinary(format) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ board, headerImage: BOARD_HEADER_IMAGE, footer: INSTITUTIONAL_FOOTER })
     });
-    if (!response.ok && (response.status === 404 || response.status === 405)) return exportInBrowser(format, board);
+    if (!response.ok && [404, 405, 501].includes(response.status)) return exportInBrowser(format, board);
     if (!response.ok) throw new Error((await response.json()).error || `Error ${response.status}`);
     const blob = await response.blob();
     await saveWithNativeDialog(blob, `${safeName(board.title)}.${format}`, [{

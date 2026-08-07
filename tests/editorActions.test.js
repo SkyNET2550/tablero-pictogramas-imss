@@ -18,7 +18,8 @@ test("el servidor genera PDF real y deja de exponer exportación JPG", async () 
   const exporter = await readFile("scripts/export-pdf.cjs", "utf8");
   assert.match(server, /api\/export\/pdf/);
   assert.match(server, /application\/pdf/);
-  assert.match(exporter, /print-to-pdf/);
+  assert.match(exporter, /chromium\.launch/);
+  assert.match(exporter, /page\.pdf/);
   assert.doesNotMatch(server, /api\/export\/jpg/);
 });
 

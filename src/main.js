@@ -14,8 +14,11 @@ import { searchAllProviders } from "./providers/provider-registry.js";
 import { rankSemanticPictograms } from "./semantic/semanticEngine.js";
 import { institutionalHeaderHtml } from "./board-branding.js";
 import { INSTITUTIONAL_FOOTER } from "./config.js";
+import { setSafeImage } from "./security.js";
+import { installMonitoring } from "./monitoring.js";
 
 const container = document.querySelector("#boards-container");
+installMonitoring();
 const status = document.querySelector("#status");
 const form = document.querySelector("#semantic-search");
 const input = document.querySelector("#search-input");
@@ -60,7 +63,7 @@ async function generate(groups) {
   } catch (error) {
     console.error(error);
     status.textContent = "No se pudo generar";
-    container.innerHTML = `<div class="error-panel"><h2>No se pudieron cargar los tableros</h2><p>${error.message}</p><p>Abre el proyecto mediante <code>npm run dev</code>; los módulos y archivos JSON no funcionan correctamente al abrir index.html como archivo local.</p></div>`;
+    container.innerHTML = `<div class="error-panel"><h2>No se pudieron cargar los tableros</h2><p>${escapeHtml(error.message)}</p><p>Abre el proyecto mediante <code>npm run dev</code>; los módulos y archivos JSON no funcionan correctamente al abrir index.html como archivo local.</p></div>`;
   }
 }
 
@@ -137,7 +140,11 @@ initDismissibleMenu();
       onSelected: selection => {
         cell.classList.remove("missing-cell");
         const imageUrl = selection.imageData || selection.imageUrl || getPictogramImageUrl(selection.id);
-        cell.innerHTML = `<img src="${imageUrl}" alt="${escapeHtml(selection.label)}"><div class="cell-label">${escapeHtml(selection.label)}</div>`;
+        cell.replaceChildren();
+        const image = document.createElement("img");
+        setSafeImage(image, imageUrl, selection.label);
+        const label = document.createElement("div"); label.className = "cell-label"; label.textContent = selection.label;
+        cell.append(image, label);
         status.textContent = `Pictograma guardado para “${term}”`;
       }
     });
@@ -180,13 +187,16 @@ function buildSemanticBoardPages(query, items) {
     const page = document.createElement("section");
     page.className = "page semantic-generated-board";
     page.dataset.group = `semantico-${slug(query)}-${index + 1}`;
-    page.innerHTML = `<header class="board-header">${institutionalHeaderHtml(sentenceCase(query))}<p class="board-description">Tablero generado automáticamente con pictogramas asociados semánticamente a “${escapeHtml(query)}”.</p></header>`;
+    page.innerHTML = `<header class="board-header">${institutionalHeaderHtml(escapeHtml(sentenceCase(query)))}<p class="board-description">Tablero generado automáticamente con pictogramas asociados semánticamente a “${escapeHtml(query)}”.</p></header>`;
     const grid = document.createElement("main");
     grid.className = "grid";
     for (const item of pageItems) {
       const cell = document.createElement("article");
       cell.className = "cell";
-      cell.innerHTML = `<img src="${item.imageUrl}" alt="${escapeHtml(item.altText || item.label)}"><div class="cell-label">${escapeHtml(sentenceCase(item.label || query))}</div>`;
+      const image = document.createElement("img");
+      setSafeImage(image, item.imageUrl, item.altText || item.label);
+      const label = document.createElement("div"); label.className = "cell-label"; label.textContent = sentenceCase(item.label || query);
+      cell.append(image, label);
       grid.append(cell);
     }
     while (grid.children.length < 16) {

@@ -1,5 +1,6 @@
 const MAX_ITEMS = 30;
 import { searchAllProviders } from "./providers/provider-registry.js";
+import { setSafeImage } from "./security.js";
 import { expandQuery, loadSemanticData } from "./semantic/semantic-data.js";
 import { expandSemanticQuery, rankSemanticPictograms } from "./semantic/semanticEngine.js";
 
@@ -20,7 +21,10 @@ export async function initRandomGallery({ onSelectPictogram } = {}) {
       card.type = "button";
       card.className = "gallery-card";
       const filename = slug(item.term);
-      card.innerHTML = `<img src="./assets/pictograms/${item.group}/${filename}.png" alt="${escapeHtml(item.term)}"><strong>${sentenceCase(item.term)}</strong><small>${escapeHtml(item.source || item.provider || "ARASAAC")}</small>`;
+      const image = document.createElement("img"); setSafeImage(image, `./assets/pictograms/${encodeURIComponent(item.group)}/${encodeURIComponent(filename)}.png`, item.term);
+      const title = document.createElement("strong"); title.textContent = sentenceCase(item.term);
+      const provider = document.createElement("small"); provider.textContent = item.source || item.provider || "ARASAAC";
+      card.append(image, title, provider);
       card.setAttribute("aria-label", `Ver tableros relacionados con ${item.term}`);
       card.addEventListener("click", () => onSelectPictogram?.(item.term));
       container.append(card);
@@ -72,7 +76,10 @@ export async function initRandomGallery({ onSelectPictogram } = {}) {
       const card = document.createElement("button");
       card.type = "button";
       card.className = "gallery-card";
-      card.innerHTML = `<img src="${item.imageUrl}" alt="${escapeHtml(item.label)}"><strong>${sentenceCase(item.label)}</strong><small>${escapeHtml(item.providerName)}</small>`;
+      const image = document.createElement("img"); setSafeImage(image, item.imageUrl, item.label);
+      const title = document.createElement("strong"); title.textContent = sentenceCase(item.label);
+      const provider = document.createElement("small"); provider.textContent = item.providerName;
+      card.append(image, title, provider);
       card.setAttribute("aria-label", `Ver tableros relacionados con ${item.label}`);
       card.addEventListener("click", () => onSelectPictogram?.(item.label));
       container.append(card);

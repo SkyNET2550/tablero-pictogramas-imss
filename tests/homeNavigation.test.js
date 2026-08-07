@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("el logotipo y la primera opciÃ³n del menÃº permiten volver al inicio", async () => {
+test("el logotipo y la primera opción del menú permiten volver al inicio", async () => {
   const html = await readFile("index.html", "utf8");
   const main = await readFile("src/main.js", "utf8");
   assert.match(html, /id="logo-upload-button"[^>]*aria-label="Volver al inicio"/);

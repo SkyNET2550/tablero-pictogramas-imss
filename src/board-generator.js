@@ -3,6 +3,7 @@ import { getPictogramImageUrl, resolvePictogram } from "./arasaac-api.js";
 import { recordMetadata, recordMissing } from "./metadata-store.js";
 import { institutionalHeaderHtml } from "./board-branding.js";
 import { pictogramKey } from "./pictogram-identity.js";
+import { escapeHtml, setSafeImage, safeImageUrl } from "./security.js";
 
 const capitalize = text => {
   const clean = text.trim().replace(/\s+/g, " ");
@@ -13,7 +14,7 @@ export async function buildBoardPage(group, selections, language = "es") {
   const page = document.createElement("section");
   page.className = "page";
   page.dataset.group = group.id;
-  page.innerHTML = `<header class="board-header">${institutionalHeaderHtml(group.titulo)}<p class="board-description">${group.descripcion || "Tablero de comunicación alternativa por pictogramas"}</p></header>`;
+  page.innerHTML = `<header class="board-header">${institutionalHeaderHtml(escapeHtml(group.titulo))}<p class="board-description">${escapeHtml(group.descripcion || "Tablero de comunicación alternativa por pictogramas")}</p></header>`;
   const grid = document.createElement("main");
   grid.className = "grid";
   const usedPictograms = new Set();
@@ -25,19 +26,26 @@ export async function buildBoardPage(group, selections, language = "es") {
     const duplicate = result && usedPictograms.has(pictogramKey(result));
     if (result && !duplicate) usedPictograms.add(pictogramKey(result));
     if (result?.imageData && !duplicate) {
-      cell.innerHTML = `<img src="${result.imageData}" alt="${result.label || term}"><div class="cell-label">${capitalize(result.label || term)}</div>`;
+      const image = document.createElement("img"); setSafeImage(image, result.imageData, result.label || term);
+      const label = document.createElement("div"); label.className = "cell-label"; label.textContent = capitalize(result.label || term);
+      cell.append(image, label);
     } else if (result?._id && !duplicate) {
       const localUrl = `./assets/pictograms/${group.id}/${slug(term)}.png`;
       const remoteUrl = result.imageUrl || getPictogramImageUrl(result._id);
-      cell.innerHTML = `<img src="${localUrl}" data-fallback="${remoteUrl}" alt="${term}"><div class="cell-label">${capitalize(term)}</div>`;
-      const image = cell.querySelector("img");
+      const image = document.createElement("img"); setSafeImage(image, localUrl, term); image.dataset.fallback = safeImageUrl(remoteUrl);
+      const label = document.createElement("div"); label.className = "cell-label"; label.textContent = capitalize(term);
+      cell.append(image, label);
       image.addEventListener("error", () => {
-        if (image.src !== remoteUrl) image.src = remoteUrl;
+        const fallback = safeImageUrl(remoteUrl);
+        if (fallback && image.src !== fallback) image.src = fallback;
       }, { once: true });
       recordMetadata({ term, group: group.id, id: result._id, source: "ARASAAC", author: "Sergio Palao", license: "CC BY-NC-SA", url: remoteUrl, date: new Date().toISOString(), manual: Boolean(result.manual) });
     } else {
       cell.classList.add("missing-cell");
-      cell.innerHTML = `<button class="missing-pictogram" type="button" aria-label="Elegir pictograma para ${term}"><span>${duplicate ? "Pictograma repetido" : "Sin pictograma"}</span><small>Elegir o sustituir</small></button><div class="cell-label">${capitalize(term)}</div>`;
+      const button = document.createElement("button"); button.className = "missing-pictogram"; button.type = "button"; button.setAttribute("aria-label", `Elegir pictograma para ${term}`);
+      const state = document.createElement("span"); state.textContent = duplicate ? "Pictograma repetido" : "Sin pictograma";
+      const help = document.createElement("small"); help.textContent = "Elegir o sustituir"; button.append(state, help);
+      const label = document.createElement("div"); label.className = "cell-label"; label.textContent = capitalize(term); cell.append(button, label);
       cell.querySelector("button").addEventListener("click", () => {
         window.dispatchEvent(new CustomEvent("choose-missing-pictogram", { detail: { term, groupId: group.id, cell } }));
       });

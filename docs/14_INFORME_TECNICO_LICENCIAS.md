@@ -1,6 +1,6 @@
 # Informe técnico de licencias y atribución
 
-Fecha: 2026-06-19T03:35:27.445Z
+Fecha: 2026-08-05T04:47:53.662Z
 
 Este informe es una revisión técnica documental y no sustituye el dictamen de la unidad jurídica competente.
 

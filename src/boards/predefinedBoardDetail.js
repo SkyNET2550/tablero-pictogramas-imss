@@ -3,6 +3,8 @@ import { searchAllProviders } from "../providers/provider-registry.js";
 import { institutionalHeaderHtml } from "../board-branding.js";
 import { INSTITUTIONAL_FOOTER } from "../config.js";
 import { deduplicatePictograms } from "../pictogram-identity.js";
+import { closeAccessibleDialog, installDialogFocusManagement, showAccessibleDialog } from "../dialog-focus.js";
+import { safeImageUrl } from "../security.js";
 
 const subboards = seedBoards.filter(board => board.level === "subboard");
 const customPictograms = new Map();
@@ -20,8 +22,9 @@ export async function initPredefinedBoardDetail() {
   const groups = document.querySelector("#predefined-board-groups");
   const headerActions = document.querySelector("#hierarchy-board-actions");
   addDialog = document.querySelector("#predefined-add-dialog");
+  installDialogFocusManagement(addDialog);
 
-  document.querySelector("#close-predefined-add").addEventListener("click", () => addDialog.close());
+  document.querySelector("#close-predefined-add").addEventListener("click", () => closeAccessibleDialog(addDialog));
   document.querySelector("#predefined-add-form").addEventListener("submit", addRequestedPictograms);
   document.querySelector("#hierarchy-back-button").addEventListener("click", () => {
     detail.hidden = true;
@@ -132,8 +135,7 @@ function openAddDialog(board, mode) {
   document.querySelector("#predefined-add-terms").placeholder = mode === "group"
     ? "Ejemplo:\nfrío\ncalor\ncobija\nventilador"
     : "Ejemplo: Cobija";
-  addDialog.showModal();
-  document.querySelector("#predefined-add-terms").focus();
+  showAccessibleDialog(addDialog, { opener: document.activeElement, focus: "#predefined-add-terms" });
 }
 
 async function addRequestedPictograms(event) {
@@ -165,7 +167,7 @@ async function addRequestedPictograms(event) {
 
   const previous = customPictograms.get(boardId) || [];
   customPictograms.set(boardId, deduplicate([...previous, ...additions]));
-  addDialog.close();
+  closeAccessibleDialog(addDialog);
   renderSingle(board);
 }
 
@@ -235,7 +237,7 @@ function boardPageHtml(board, selected, loading = false, groupLabel = "") {
       ${groupLabel ? `<small class="semantic-page-label">${escapeHtml(groupLabel)}</small>` : ""}
     </header>
     <div class="predefined-pictogram-grid">${selected.map(item => `<article class="predefined-pictogram-card">
-      <img src="${item.imageUrl || `./assets/pictograms/${escapeAttr(item.group)}/${slug(item.term)}.png`}" alt="${escapeAttr(item.term)}">
+      <img src="${escapeAttr(safeImageUrl(item.imageUrl) || `./assets/pictograms/${item.group}/${slug(item.term)}.png`)}" alt="${escapeAttr(item.term)}">
       <strong>${escapeHtml(sentenceCase(item.term))}</strong>
       <small>${escapeHtml(item.source || item.provider || "ARASAAC")}</small>
     </article>`).join("")}${Array.from({ length: Math.max(0, 16 - selected.length) }, () => '<div class="predefined-empty-cell" aria-hidden="true"></div>').join("")}</div>

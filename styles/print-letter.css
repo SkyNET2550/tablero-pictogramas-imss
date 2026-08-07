@@ -4,7 +4,8 @@ body { margin: 0; background: #e8edf2; color: #111; font-family: Arial, Helvetic
 .app-footer { max-width: 1100px; margin: 20px auto 0; padding: 12px 18px 18px; color: #40586b; font-size: 11px; line-height: 1.35; text-align: center; }
 .skip-link { position: fixed; left: 10px; top: -60px; z-index: 1000; padding: 10px 14px; color: #fff; background: #111; }
 .skip-link:focus { top: 10px; }
-button:focus-visible, input:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 4px solid #ffb000; outline-offset: 2px; }
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible { outline: 4px solid #ffb000; outline-offset: 2px; }
+button, summary, input[type="checkbox"] { min-width: 44px; min-height: 44px; }
 .app-header { position: relative; z-index: 5; padding: 10px max(20px, calc((100% - 1000px)/2)) 12px; color: #fff; background: linear-gradient(135deg, #073b73, #087a88); box-shadow: 0 2px 8px #0004; }
 .institutional-heading { position: relative; display: grid; grid-template-columns: 76px minmax(0, 1fr); grid-template-rows: auto auto auto; gap: 6px 14px; align-items: start; margin-bottom: 0; }
 .header-content { grid-column: 2; min-width: 0; display: grid; gap: 4px; }
@@ -98,7 +99,7 @@ input { font: inherit; }
 .predefined-add-panel textarea { width: 100%; resize: vertical; min-height: 130px; box-sizing: border-box; }
 .predefined-generated-page + .predefined-generated-page { margin-top: 24px; }
 .semantic-page-label { display: block; margin-top: 3px; color: #087a88; font-weight: 700; }
-.loading-pictograms::after { content: "Completando pictogramas asociadosâ€¦"; position: absolute; left: 50%; bottom: 18mm; transform: translateX(-50%); padding: 5px 9px; border-radius: 5px; color: #fff; background: #073b73; font-size: 11px; }
+.loading-pictograms::after { content: "Completando pictogramas asociados…"; position: absolute; left: 50%; bottom: 18mm; transform: translateX(-50%); padding: 5px 9px; border-radius: 5px; color: #fff; background: #073b73; font-size: 11px; }
 .initial-gallery { max-width: 1100px; margin: 20px auto; padding: 18px; border-radius: 10px; background: #fff; box-shadow: 0 2px 12px #0002; }
 .initial-gallery > header { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; margin-bottom: 14px; }
 .gallery-title-row { width: min(920px, 100%); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -179,7 +180,7 @@ dialog::backdrop { background: #001b31cc; }
 .editor-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; min-height: 0; }
 .editor-cell { position: relative; min-height: 120px; border: 2px solid #0757a5; border-radius: 9px; padding: 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: #fff; cursor: grab; }
 .editor-cell.selected { outline: 5px solid #ffb000; }
-.editor-cell.validated::after { content: "âœ“"; position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; color: #fff; background: #17833b; font-weight: 900; }
+.editor-cell.validated::after { content: "✓"; position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; color: #fff; background: #17833b; font-weight: 900; }
 .editor-cell img { width: 100%; height: 112px; padding: 0; object-fit: contain; object-position: center; }
 .editor-cell strong { position: relative; z-index: 3; display: block; width: 100%; min-height: 28px; padding: 3px 4px; text-align: center; cursor: text; background: #fff; border-radius: 5px; }
 .editor-cell strong:hover, .editor-cell strong:focus { color: #0757a5; text-decoration: underline; text-decoration-thickness: 1px; outline: 2px solid #f6b400; outline-offset: 1px; }
@@ -339,5 +340,14 @@ dialog::backdrop { background: #001b31cc; }
   .hierarchy-board-actions button { min-width: 0; min-height: 30px; padding: 3px 4px; font-size: 8px; }
   .hierarchy-board-actions .hierarchy-back-button { width: 30px; min-width: 30px; font-size: 19px; }
   .home-view, .predefined-view { max-width: 100%; overflow-x: hidden; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+@media (forced-colors: active) {
+  :where(.cell, .editor-cell, button, input, textarea, select) { border: 2px solid CanvasText; }
+  :where(.api-status, .editor-cell.validated)::after { forced-color-adjust: none; }
 }
 

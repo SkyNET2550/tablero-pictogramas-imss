@@ -1,20 +1,12 @@
 const fs = require("fs");
 const path = require("path");
-const { execFileSync } = require("child_process");
 const { pathToFileURL } = require("url");
+const { chromium } = require("playwright");
 
 const [inputPath, outputPath, appRoot] = process.argv.slice(2);
 const payload = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 const board = payload.board || {};
 const temporaryHtml = `${outputPath}.html`;
-const chrome = [
-  process.env.CHROME_PATH,
-  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-  "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
-].filter(Boolean).find(candidate => fs.existsSync(candidate));
-if (!chrome) throw new Error("No se encontró Chrome o Microsoft Edge para generar el PDF.");
 
 const cells = Array.from({ length: 16 }, (_, index) => {
   const pictogram = board.cells?.[index] || board.pictograms?.[index];
@@ -33,11 +25,17 @@ h1{font-size:24px;text-align:center;text-transform:uppercase;margin:4px 0 8px;bo
 footer{font-size:6px;line-height:1.1;text-align:center;margin-top:5px;color:#444}
 </style></head><body><section class="page"><img class="brand" src="${brand}" alt=""><h1>${escapeHtml(board.title || "Tablero de comunicación")}</h1><div class="grid">${cells}</div><footer>Material institucional del Instituto Mexicano del Seguro Social con fines informativos, accesibles y no comerciales. Los pictogramas provienen de repositorios abiertos de comunicación aumentativa y alternativa, conforme a sus respectivas licencias.</footer></section></body></html>`;
 fs.writeFileSync(temporaryHtml, html);
-try {
-  execFileSync(chrome, ["--headless", "--disable-gpu", "--no-pdf-header-footer", `--print-to-pdf=${outputPath}`, pathToFileURL(temporaryHtml).href], { stdio: "pipe", timeout: 120000 });
-} finally {
-  fs.rmSync(temporaryHtml, { force: true });
-}
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(pathToFileURL(temporaryHtml).href, { waitUntil: "networkidle" });
+    await page.pdf({ path: outputPath, format: "Letter", printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+  } finally {
+    await browser.close();
+    fs.rmSync(temporaryHtml, { force: true });
+  }
+})().catch(error => { fs.rmSync(temporaryHtml, { force: true }); throw error; });
 function resolveImage(value = "") {
   if (/^(data:|https?:|file:)/i.test(value)) return value;
   return pathToFileURL(path.join(appRoot, value.replace(/^\.\//, "").replace(/\//g, path.sep))).href;

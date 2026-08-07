@@ -1,22 +1,28 @@
 {
-  "generated_at": "2026-06-19T20:01:17.765Z",
+  "generated_at": "2026-08-05T04:47:54.043Z",
   "checks": {
     "languageDeclared": true,
-    "skipLink": true,
-    "mainLandmark": true,
+    "viewportDeclared": true,
+    "skipLinkTargetsMain": true,
+    "uniqueIds": true,
     "imageAlternatives": true,
+    "labelledDialogs": true,
+    "liveRegions": true,
     "visibleFocus": true,
-    "printLetter": true,
+    "reducedMotion": true,
+    "forcedColors": true,
+    "dialogFocusRestoration": true,
     "keyboardCellMovement": true,
-    "noColorOnly": true,
-    "liveRegions": true
+    "noMojibake": true
   },
   "passed": true,
   "failures": [],
+  "duplicateIds": [],
   "manual_review_required": [
-    "Lector de pantalla NVDA/JAWS",
-    "Contraste con herramientas WCAG",
-    "Prueba con usuarios CAA",
-    "Orden de foco en todos los diálogos"
+    "NVDA y JAWS",
+    "Contraste WCAG medido",
+    "Zoom 200 % y 400 %",
+    "Prueba táctil",
+    "Prueba con personas usuarias de CAA"
   ]
 }

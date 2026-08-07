@@ -1,6 +1,6 @@
 {
   "name": "arasaac-tableros-html",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,12 @@
     "build": "node scripts/build-static.js",
     "init:multisource": "node scripts/init-multisource.js",
     "test": "node --test tests/*.test.js",
+    "test:e2e": "node --test tests-e2e/*.test.js",
+    "validate:html": "html-validate index.html data/templates/*.html",
+    "validate:security": "node scripts/security-audit.js",
+    "validate:resources": "node scripts/resource-audit.js",
+    "validate": "npm test && npm run validate:html && npm run validate:security && npm run validate:resources && npm run audit:a11y",
+    "release:check": "node scripts/release-readiness.js",
     "backup": "node scripts/backup.js",
     "audit:licenses": "node scripts/legal-audit.js",
     "audit:a11y": "node scripts/accessibility-audit.js",
@@ -18,5 +24,14 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.3.0",
+    "docx": "^9.5.1",
+    "playwright": "^1.54.2"
+  },
+  "devDependencies": {
+    "axe-core": "^4.10.3",
+    "html-validate": "^10.1.2"
   }
 }

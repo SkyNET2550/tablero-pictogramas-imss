@@ -1,5 +1,5 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 import { tmpdir } from "node:os";
@@ -7,6 +7,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { loadEnv } from "../src/server/env.js";
 import { GlobalSymbolsClient, createGlobalSymbolsService, ExternalProviderError } from "../src/server/global-symbols.js";
+import { applyCors, enforceRateLimit, isLoopbackRequest, isMutationAllowed, readJsonBody, setSecurityHeaders } from "../src/server/http-security.js";
 
 const root = normalize(join(import.meta.dirname, ".."));
 const projectRoot = normalize(join(root, ".."));
@@ -20,8 +21,8 @@ const globalSymbolsClient = new GlobalSymbolsClient({
 });
 const globalSymbolsService = createGlobalSymbolsService({ root, client: globalSymbolsClient });
 const execFileAsync = promisify(execFile);
-const bundledNode = "C:\\Users\\Rosemberg\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe";
-const bundledModules = "C:\\Users\\Rosemberg\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\node_modules";
+const host = process.env.APP_HOST || "127.0.0.1";
+const allowedOrigins = new Set((process.env.ALLOWED_ORIGINS || "http://127.0.0.1:4173,http://localhost:4173").split(",").map(value => value.trim()).filter(Boolean));
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -33,9 +34,16 @@ const mime = {
   ".svg": "image/svg+xml; charset=utf-8"
 };
 const server = createServer((request, response) => {
-  const urlPath = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+  setSecurityHeaders(response);
+  let urlPath;
+  try { urlPath = decodeURIComponent(new URL(request.url, "http://localhost").pathname); }
+  catch { response.writeHead(400); response.end("Solicitud no válida"); return; }
   if (urlPath.startsWith("/api/")) {
-    handleApi(request, response, urlPath);
+    void handleApi(request, response, urlPath).catch(error => {
+      if (response.headersSent) return response.end();
+      response.writeHead(error.status || 500, { "Content-Type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ error: error.status ? error.message : "Error interno del servidor" }));
+    });
     return;
   }
   let file = normalize(join(root, urlPath === "/" ? "index.html" : urlPath));
@@ -48,11 +56,18 @@ const server = createServer((request, response) => {
 
 async function handleApi(request, response, path) {
   const requestUrl = new URL(request.url, "http://localhost");
-  const send = (status, payload) => { response.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Access-Control-Allow-Origin": "*" }); response.end(JSON.stringify(payload)); };
+  setSecurityHeaders(response, { contentType: "application/json; charset=utf-8" });
+  if (!applyCors(request, response, allowedOrigins) || !isMutationAllowed(request, allowedOrigins)) {
+    response.writeHead(403); response.end(JSON.stringify({ error: "Origen no permitido" })); return;
+  }
+  if (request.method === "OPTIONS") { response.writeHead(204); response.end(); return; }
+  const rate = enforceRateLimit(request, path);
+  if (!rate.allowed) { response.setHeader("Retry-After", String(rate.retryAfter)); response.writeHead(429); response.end(JSON.stringify({ error: "Demasiadas solicitudes" })); return; }
+  const send = (status, payload) => { response.statusCode = status; response.end(JSON.stringify(payload)); };
   if (request.method === "GET" && path === "/api/health") return send(200, { ok: true, app: "Pictogramas_CAA_IMSS", version: "1.0" });
   if (request.method === "GET" && path === "/api/storage") {
     await mkdir(savedDirectory, { recursive: true });
-    return send(200, { ok: true, folder: "Guardados", path: savedDirectory });
+    return send(200, { ok: true, folder: "Guardados" });
   }
   if (request.method === "GET" && path === "/api/pictograms/local") {
     const data = JSON.parse(await readFile(join(root, "data/metadata/pictograms_master.json"), "utf8"));
@@ -79,14 +94,14 @@ async function handleApi(request, response, path) {
     const id = path.split("/")[3]; await checkProviders(id); return send(200, await providerStatus());
   }
   if (request.method === "POST" && /^\/api\/providers\/[^/]+\/enabled$/.test(path)) {
-    const id = path.split("/")[3]; const body = await readBody(request);
+    const id = path.split("/")[3]; const body = await readJsonBody(request, path);
     const status = await providerStatus(); if (!status[id]) return send(404, { error: "Proveedor no encontrado" });
     status[id].enabled = Boolean(body.enabled); if (!body.enabled) { status[id].status = "disabled"; status[id].message = "Servicio desactivado manualmente"; }
     await writeFile(join(root, "metadata/provider_status.json"), JSON.stringify(status, null, 2)); return send(200, status);
   }
   if (request.method === "POST" && /^\/api\/providers\/[^/]+\/connect$/.test(path)) {
     const id = path.split("/")[3];
-    const body = await readBody(request);
+    const body = await readJsonBody(request, path);
     if (!["arasaac", "opensymbols", "globalsymbols", "symbotalk"].includes(id)) return send(404, { error: "Proveedor no encontrado" });
     if (id === "globalsymbols") {
       if (!body.apiKey) return send(400, { message: "Ingresa la clave API de Global Symbols." });
@@ -117,7 +132,7 @@ async function handleApi(request, response, path) {
     return board ? send(200, board) : send(404, { error: "Tablero no encontrado" });
   }
   if (request.method === "POST" && path === "/api/boards") {
-    const body = await readBody(request); const registry = await readRegistry();
+    const body = await readJsonBody(request, path); const registry = await readRegistry();
     const board = { ...body, id: body.id || body.board_id || `board_${Date.now()}`, updated_at: new Date().toISOString() };
     const index = registry.findIndex(item => item.id === board.id);
     index >= 0 ? registry[index] = board : registry.push(board);
@@ -125,7 +140,7 @@ async function handleApi(request, response, path) {
     return send(201, board);
   }
   if (request.method === "POST" && path === "/api/boards/save-editable") {
-    const body = await readBody(request);
+    const body = await readJsonBody(request, path);
     const board = body.board;
     if (!board || typeof board !== "object") return send(400, { error: "El tablero editable no es válido." });
     await mkdir(savedDirectory, { recursive: true });
@@ -141,7 +156,8 @@ async function handleApi(request, response, path) {
     return send(201, { ok: true, filename, folder: "Guardados" });
   }
   if (request.method === "POST" && path === "/api/native-dialog/save") {
-    const body = await readBody(request);
+    if (!isLoopbackRequest(request)) return send(403, { error: "Los diálogos nativos sólo están disponibles en el equipo local." });
+    const body = await readJsonBody(request, path);
     await mkdir(savedDirectory, { recursive: true });
     const selected = await nativeDialog("save", savedDirectory, body.suggestedName, body.filter);
     if (!selected) return send(200, { cancelled: true });
@@ -149,20 +165,23 @@ async function handleApi(request, response, path) {
     return send(200, { ok: true, path: selected });
   }
   if (request.method === "POST" && path === "/api/native-dialog/open") {
+    if (!isLoopbackRequest(request)) return send(403, { error: "Los diálogos nativos sólo están disponibles en el equipo local." });
     await mkdir(savedDirectory, { recursive: true });
     const selected = await nativeDialog("open", savedDirectory, "tablero.PICTIMS", "Archivo de tablero de pictogramas IMSS (*.PICTIMS)|*.PICTIMS");
     if (!selected) return send(200, { cancelled: true });
     return send(200, { ok: true, filename: selected, content: await readFile(selected, "utf8") });
   }
   if (request.method === "POST" && (path === "/api/export/docx" || path === "/api/export/png" || path === "/api/export/pdf")) {
+    let input;
+    let output;
     try {
       const format = path.endsWith("docx") ? "docx" : path.endsWith("pdf") ? "pdf" : "png";
-      const body = await readBody(request);
+      const body = await readJsonBody(request, path);
       const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      const input = join(tmpdir(), `picto-${token}.json`);
-      const output = join(tmpdir(), `picto-${token}.${format}`);
+      input = join(tmpdir(), `picto-${token}.json`);
+      output = join(tmpdir(), `picto-${token}.${format}`);
       await writeFile(input, JSON.stringify(body));
-      await execFileAsync(bundledNode, [join(root, `scripts/export-${format}.cjs`), input, output, root], { env: { ...process.env, CODEX_NODE_MODULES: bundledModules }, timeout: 120000 });
+      await execFileAsync(process.execPath, [join(root, `scripts/export-${format}.cjs`), input, output, root], { env: process.env, timeout: 120000 });
       const data = await readFile(output);
       await mkdir(savedDirectory, { recursive: true });
       const savedFilename = uniqueSavedFilename(savedDirectory, safeFileName(body.board?.title || "tablero"), format);
@@ -175,13 +194,14 @@ async function handleApi(request, response, path) {
       response.end(data);
     } catch (error) {
       send(500, { error: error.message });
+    } finally {
+      if (input || output) await Promise.allSettled([input && rm(input, { force: true }), output && rm(output, { force: true })].filter(Boolean));
     }
     return;
   }
   if (request.method === "POST" && path.startsWith("/api/search")) return send(200, { method: "client-federated-search", available: true });
   return send(404, { error: "Ruta no encontrada" });
 }
-async function readBody(request) { let text = ""; for await (const chunk of request) text += chunk; return text ? JSON.parse(text) : {}; }
 function safeFileName(value = "") {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "tablero";
@@ -242,7 +262,7 @@ async function checkProviders(onlyId) {
   log.push(...ids.filter(id=>status[id]).map(id=>status[id])); await writeFile(join(root,"metadata/provider_connection_log.json"),JSON.stringify(log.slice(-500),null,2));
   return status;
 }
-server.listen(4173, "0.0.0.0", () => {
+server.listen(4173, host, () => {
   console.log("Tableros disponibles en http://localhost:4173");
-  console.log("También puede usar la dirección IP local del equipo seguida de :4173");
+  if (host !== "127.0.0.1" && host !== "localhost") console.warn(`Modo de red habilitado en ${host}:4173. Configure ALLOWED_ORIGINS antes de compartirlo.`);
 });
