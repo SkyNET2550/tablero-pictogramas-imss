@@ -355,14 +355,14 @@ function deleteBoardPage(boardId) {
 
 function makeCell(cell, index, boardId = activeId) {
   const article = document.createElement("article");
-  article.className = `editor-cell${cell.validated ? " validated" : ""}`;
+  article.className = "editor-cell";
   article.draggable = true;
   article.tabIndex = 0;
   article.dataset.index = index;
   article.setAttribute("role", "group");
   article.setAttribute("aria-label", `${cell.label}. Posición ${index + 1} de 16.`);
   if (cell.imageData && !cell.normalized) normalizeStoredPng(cell);
-  article.innerHTML = `<img alt=""><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="validate">${cell.validated ? "Quitar validación" : "Validar"}</button><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
+  article.innerHTML = `<img alt=""><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
   setSafeImage(article.querySelector("img"), cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id), cell.label);
   article.querySelector("strong").addEventListener("click", event => {
     event.stopPropagation();
@@ -398,7 +398,6 @@ function makeCell(cell, index, boardId = activeId) {
     article.classList.add("selected");
     activeId = boardId;
     const action = event.target.dataset.action;
-    if (action === "validate") { cell.validated = !cell.validated; markDirty(); save(); renderPage(); }
     if (action === "replace") openPicker(index);
     if (action === "delete") { removeCellAndShift(index); markDirty(); save(); renderPage(); }
   });

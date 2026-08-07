@@ -6,7 +6,8 @@ test("los pictogramas muestran acciones verticales y editan la etiqueta desde el
   const editor = await readFile("src/board-editor.js", "utf8");
   const styles = await readFile("styles/print-letter.css", "utf8");
 
-  assert.match(editor, /data-action="validate"/);
+  assert.doesNotMatch(editor, /data-action="validate"/);
+  assert.doesNotMatch(editor, /Quitar validaci/);
   assert.doesNotMatch(editor, /data-action="edit-label"/);
   assert.doesNotMatch(editor, />Editar nombre</);
   assert.match(editor, /function editCellLabel\(article, cell\)/);
@@ -19,6 +20,7 @@ test("los pictogramas muestran acciones verticales y editan la etiqueta desde el
   assert.doesNotMatch(editor, /data-action="left"/);
   assert.doesNotMatch(editor, /data-action="right"/);
   assert.match(styles, /\.cell-actions \{[^}]*flex-direction: column/s);
+  assert.doesNotMatch(styles, /editor-cell\.validated::after/);
 });
 
 test("los tableros semánticos se presentan como páginas secuenciales hacia abajo", async () => {
