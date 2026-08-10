@@ -37,3 +37,12 @@ test("PICTIMS queda reservado para tableros editables, no para exportaciones", a
   assert.match(source, /`\$\{safeName\(board\.title\)\}\.\$\{format\}`/);
   assert.doesNotMatch(source, /exportBinary\("PICTIMS"\)|export-pictims-button/i);
 });
+
+test("abrir un tablero guardado actualiza el tablero existente por id", async () => {
+  const source = await readFile("src/board-editor.js", "utf8");
+
+  assert.doesNotMatch(source, /imported\.id = uid\(\)/);
+  assert.match(source, /imported\.id = imported\.id \|\| uid\(\)/);
+  assert.match(source, /boards\.findIndex\(board => board\.id === imported\.id\)/);
+  assert.match(source, /boards\[existingIndex\] = imported/);
+});

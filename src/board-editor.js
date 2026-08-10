@@ -831,9 +831,14 @@ async function openEditableBoard(event) {
 async function importEditableFile(file) {
   try {
     const imported = normalizeBoard(JSON.parse(await file.text()));
-    imported.id = uid();
+    imported.id = imported.id || uid();
     imported.title = imported.title || "Tablero importado";
-    boards.push(imported);
+    const existingIndex = boards.findIndex(board => board.id === imported.id);
+    if (existingIndex >= 0) {
+      boards[existingIndex] = imported;
+    } else {
+      boards.push(imported);
+    }
     activeId = imported.id;
     save();
     render();
