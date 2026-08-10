@@ -12,3 +12,4 @@ assets/pictograms/*/normalized/*
 *.log
 .DS_Store
 .vercel/
+.env*

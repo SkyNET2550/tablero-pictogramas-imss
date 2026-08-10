@@ -1,9 +1,9 @@
-import { readFile, access } from "node:fs/promises";
-import { dirname, join, normalize } from "node:path";
+import { readFile, access, readdir } from "node:fs/promises";
+import { dirname, join, normalize, relative, sep } from "node:path";
 import { execFileSync } from "node:child_process";
 
 const failures = [];
-const tracked = execFileSync("git", ["ls-files", "*.html", "*.css", "*.js", "*.json", "*.md"], { encoding: "utf8" }).split(/\r?\n/).filter(Boolean);
+const tracked = await listProjectFiles();
 for (const file of tracked) {
   const text = await readFile(file, "utf8");
   if (/[\u00c3\u00c2]/.test(text)) failures.push(`${file}: posible texto mal codificado`);
@@ -23,3 +23,25 @@ if (failures.length) {
   failures.slice(0, 50).forEach(item => console.error(`- ${item}`));
   process.exitCode = 1;
 } else console.log(`Auditoría de recursos aprobada: ${metadata.length} pictogramas con metadatos.`);
+
+async function listProjectFiles() {
+  try {
+    return execFileSync("git", ["ls-files", "*.html", "*.css", "*.js", "*.json", "*.md"], { encoding: "utf8" }).split(/\r?\n/).filter(Boolean);
+  } catch {
+    const all = await walk(".");
+    return all.filter(file => /\.(html|css|js|json|md)$/i.test(file));
+  }
+}
+
+async function walk(dir) {
+  const ignored = new Set([".git", ".vercel", "node_modules", "Guardados", "backups", "cache", "logs", "output", "outputs"]);
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    if (ignored.has(entry.name)) continue;
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...await walk(fullPath));
+    else files.push(relative(".", fullPath).split(sep).join("/"));
+  }
+  return files;
+}
