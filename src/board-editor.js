@@ -127,7 +127,7 @@ function normalizeBoard(board) {
   return { ...board, cells: removeBoardDuplicates(cells) };
 }
 function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(boards)); } catch {}
+  safeSetLocalStorage(STORAGE_KEY, JSON.stringify(boards));
   void saveBoardsToBrowser(boards).catch(() => {});
 }
 async function restoreIndexedBoards() {
@@ -141,12 +141,31 @@ async function restoreIndexedBoards() {
 function markDirty() { editorDirty = true; }
 function autosaveCurrentEditor() {
   if (!editor.open || !editorDirty) return;
-  localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
+  safeSetLocalStorage(AUTOSAVE_KEY, JSON.stringify({
     savedAt: new Date().toISOString(),
     activeId,
     boards
   }));
   save();
+}
+
+function safeSetLocalStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    if (isStorageQuotaError(error)) {
+      try { localStorage.removeItem(key); } catch {}
+      return false;
+    }
+    return false;
+  }
+}
+
+function isStorageQuotaError(error) {
+  return error?.name === "QuotaExceededError"
+    || error?.name === "NS_ERROR_DOM_QUOTA_REACHED"
+    || /quota|exceeded/i.test(error?.message || "");
 }
 
 function createBoard() {

@@ -31,5 +31,8 @@ test("el tablero abierto se autosguarda silenciosamente cada minuto", async () =
   assert.match(editor, /setInterval\(autosaveCurrentEditor,\s*60000\)/);
   assert.match(editor, /function autosaveCurrentEditor\(\)/);
   assert.match(editor, /if \(!editor\.open \|\| !editorDirty\) return/);
-  assert.match(editor, /localStorage\.setItem\(AUTOSAVE_KEY/);
+  assert.match(editor, /safeSetLocalStorage\(AUTOSAVE_KEY/);
+  assert.match(editor, /function safeSetLocalStorage\(key, value\)/);
+  assert.match(editor, /isStorageQuotaError\(error\)/);
+  assert.match(editor, /localStorage\.removeItem\(key\)/);
 });
