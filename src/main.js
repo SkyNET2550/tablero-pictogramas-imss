@@ -126,6 +126,7 @@ initDismissibleMenu();
     location.hash = "tableros-predefinidos";
     showPredefined();
   });
+  document.querySelector("#refresh-app-button").addEventListener("click", refreshApplicationCache);
   window.addEventListener("hashchange", applyViewFromHash);
   applyViewFromHash();
   initInstitutionalBrand(() => {
@@ -149,6 +150,27 @@ initDismissibleMenu();
       }
     });
   });
+}
+
+async function refreshApplicationCache() {
+  status.textContent = "Actualizando aplicación sin borrar tableros…";
+  try {
+    if ("caches" in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+    }
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(registration => registration.unregister()));
+    }
+    sessionStorage.clear();
+    status.textContent = "Aplicación actualizada. Recargando…";
+    setTimeout(() => window.location.reload(), 150);
+  } catch (error) {
+    console.error(error);
+    status.textContent = "No se pudo actualizar la caché de la aplicación.";
+    alert(`No se pudo actualizar la aplicación: ${error.message}`);
+  }
 }
 
 async function generateBoardFromPictogram(term) {
