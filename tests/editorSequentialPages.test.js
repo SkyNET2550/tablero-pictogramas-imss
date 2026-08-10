@@ -13,6 +13,7 @@ test("los pictogramas muestran acciones verticales y editan la etiqueta desde el
   assert.match(editor, /function editCellLabel\(article, cell\)/);
   assert.match(editor, /cell-label-editor/);
   assert.match(editor, /label\.replaceWith\(input\)/);
+  assert.match(editor, /input\.addEventListener\("keydown", event => \{\s*event\.stopPropagation\(\);/s);
   assert.match(editor, /querySelector\("strong"\)\.addEventListener\("click"/);
   assert.doesNotMatch(editor, /prompt\("Editar nombre del pictograma"/);
   assert.match(editor, /data-action="replace"/);

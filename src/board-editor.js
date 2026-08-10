@@ -465,6 +465,7 @@ function editCellLabel(article, cell) {
   };
   input.addEventListener("click", event => event.stopPropagation());
   input.addEventListener("keydown", event => {
+    event.stopPropagation();
     if (event.key === "Enter") {
       event.preventDefault();
       finish(true);
