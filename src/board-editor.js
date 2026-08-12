@@ -817,7 +817,7 @@ async function openEditableBoardDialog() {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || `Error ${response.status}`);
     if (result.cancelled) return;
-    const file = new File([result.content], result.filename || "tablero.PICTIMS", { type: "application/x-pictims+json" });
+    const file = new File([result.content], result.filename || "tablero.pictims", { type: "application/x-pictims+json" });
     await importEditableFile(file);
   } catch (error) {
     alert(`No se pudo abrir el tablero: ${error.message}`);
@@ -834,6 +834,7 @@ async function importEditableFile(file) {
     const imported = normalizeBoard(JSON.parse(await file.text()));
     imported.id = imported.id || uid();
     imported.title = imported.title || "Tablero importado";
+    imported.editableExtension = "pictims";
     const existingIndex = boards.findIndex(board => board.id === imported.id);
     if (existingIndex >= 0) {
       boards[existingIndex] = imported;
@@ -852,8 +853,8 @@ async function saveCurrentEditableBoard() {
   try {
     const saved = await saveWithNativeDialog(
       new Blob([JSON.stringify({ ...board, savedAt: new Date().toISOString() }, null, 2)], { type: "application/x-pictims+json;charset=utf-8" }),
-      `${safeName(board.title)}.PICTIMS`,
-      [{ description: "Archivo de tablero de pictogramas IMSS", accept: { "application/x-pictims+json": [".PICTIMS"] } }]
+      `${safeName(board.title)}.pictims`,
+      [{ description: "Archivo de tablero de pictogramas IMSS", accept: { "application/x-pictims+json": [".pictims", ".PICTIMS"] } }]
     );
     if (saved) markSemanticDraftSaved();
     return saved;

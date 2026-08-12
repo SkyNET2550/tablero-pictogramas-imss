@@ -145,11 +145,11 @@ async function handleApi(request, response, path) {
     if (!board || typeof board !== "object") return send(400, { error: "El tablero editable no es válido." });
     await mkdir(savedDirectory, { recursive: true });
     const baseName = safeFileName(board.title || "tablero");
-    let filename = `${baseName}.PICTIMS`;
+    let filename = `${baseName}.pictims`;
     let destination = join(savedDirectory, filename);
     if (existsSync(destination)) {
       const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-      filename = `${baseName}-${stamp}.PICTIMS`;
+      filename = `${baseName}-${stamp}.pictims`;
       destination = join(savedDirectory, filename);
     }
     await writeFile(destination, JSON.stringify({ ...board, savedAt: new Date().toISOString() }, null, 2), "utf8");
@@ -167,7 +167,7 @@ async function handleApi(request, response, path) {
   if (request.method === "POST" && path === "/api/native-dialog/open") {
     if (!isLoopbackRequest(request)) return send(403, { error: "Los diálogos nativos sólo están disponibles en el equipo local." });
     await mkdir(savedDirectory, { recursive: true });
-    const selected = await nativeDialog("open", savedDirectory, "tablero.PICTIMS", "Archivo de tablero de pictogramas IMSS (*.PICTIMS)|*.PICTIMS");
+    const selected = await nativeDialog("open", savedDirectory, "tablero.pictims", "Archivo de tablero de pictogramas IMSS (*.pictims;*.PICTIMS)|*.pictims;*.PICTIMS");
     if (!selected) return send(200, { cancelled: true });
     return send(200, { ok: true, filename: selected, content: await readFile(selected, "utf8") });
   }
@@ -211,7 +211,7 @@ function uniqueSavedFilename(directory, baseName, extension) {
   if (!existsSync(join(directory, filename))) return filename;
   return `${baseName}-${new Date().toISOString().replace(/[:.]/g, "-")}.${extension}`;
 }
-async function nativeDialog(mode, initialDirectory, suggestedName = "tablero.PICTIMS", filter = "Todos los archivos (*.*)|*.*") {
+async function nativeDialog(mode, initialDirectory, suggestedName = "tablero.pictims", filter = "Todos los archivos (*.*)|*.*") {
   const { stdout } = await execFileAsync("powershell.exe", [
     "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass",
     "-File", join(root, "scripts", "native-dialog.ps1"),

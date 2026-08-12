@@ -1,7 +1,7 @@
 param(
   [Parameter(Mandatory=$true)][ValidateSet("save","open")][string]$Mode,
   [Parameter(Mandatory=$true)][string]$InitialDirectory,
-  [string]$SuggestedName = "tablero.PICTIMS",
+  [string]$SuggestedName = "tablero.pictims",
   [string]$Filter = "Todos los archivos (*.*)|*.*"
 )
 
