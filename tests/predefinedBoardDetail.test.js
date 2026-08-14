@@ -12,7 +12,7 @@ test("el tablero predefinido se presenta en cuadrícula carta imprimible", async
   const module = await readFile("src/boards/predefinedBoardDetail.js", "utf8");
   assert.match(css, /\.predefined-letter-page/);
   assert.match(css, /body\.print-predefined/);
-  assert.match(module, /chunk\(boardPictograms\(board\), 16\)/);
+  assert.match(module, /chunk\(boardPictograms\(board\), APP_CONFIG\.pictogramsPerPage\)/);
 });
 
 test("cada tema genera todas sus páginas y permite imprimir desde el encabezado contextual", async () => {

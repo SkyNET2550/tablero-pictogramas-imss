@@ -4,7 +4,7 @@ export const APP_CONFIG = Object.freeze({
   language: "es",
   storageFolder: "Guardados",
   pageSize: "letter",
-  pictogramsPerPage: 16,
+  pictogramsPerPage: 20,
   initialGallerySize: 30,
   exportFormats: Object.freeze(["pdf", "png", "docx"])
 });

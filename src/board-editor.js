@@ -6,9 +6,12 @@ import { deduplicatePictograms, hasPictogramDuplicate, removeBoardDuplicates } f
 import { closeAccessibleDialog, installDialogFocusManagement, showAccessibleDialog } from "./dialog-focus.js";
 import { setSafeImage } from "./security.js";
 import { loadBoardsFromBrowser, saveBoardsToBrowser } from "./browser-storage.js";
+import { APP_CONFIG } from "./config/appConfig.js";
 
 const STORAGE_KEY = "arasaac-custom-boards-v1";
 const AUTOSAVE_KEY = "arasaac-custom-boards-autosave-v1";
+const CELLS_PER_PAGE = APP_CONFIG.pictogramsPerPage;
+const COLUMNS_PER_PAGE = 4;
 const editor = document.querySelector("#board-editor");
 const picker = document.querySelector("#pictogram-picker");
 const page = document.querySelector("#editor-page");
@@ -83,7 +86,7 @@ export function openPredefinedBoardEditor(predefinedBoard) {
       id: uid(),
       predefinedId: predefinedBoard.id,
       title: predefinedBoard.title,
-      cells: Array(16).fill(null)
+      cells: Array(CELLS_PER_PAGE).fill(null)
     };
     boards.push(board);
     activeId = board.id;
@@ -119,12 +122,12 @@ function loadBoards() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (Array.isArray(saved) && saved.length) return saved.map(normalizeBoard);
   } catch {}
-  return [{ id: uid(), title: "Mi tablero", cells: Array(16).fill(null) }];
+  return [{ id: uid(), title: "Mi tablero", cells: Array(CELLS_PER_PAGE).fill(null) }];
 }
 function normalizeBoard(board) {
-  const cells = Array.isArray(board.cells) ? board.cells.slice(0, 16) : [];
-  while (cells.length < 16) cells.push(null);
-  return { ...board, cells: removeBoardDuplicates(cells) };
+  const cells = Array.isArray(board.cells) ? board.cells.slice(0, CELLS_PER_PAGE) : [];
+  while (cells.length < CELLS_PER_PAGE) cells.push(null);
+  return { ...board, cells: removeBoardDuplicates(cells, CELLS_PER_PAGE) };
 }
 function save() {
   safeSetLocalStorage(STORAGE_KEY, JSON.stringify(boards));
@@ -169,7 +172,7 @@ function isStorageQuotaError(error) {
 }
 
 function createBoard() {
-  const board = { id: uid(), title: `Tablero ${boards.length + 1}`, cells: Array(16).fill(null) };
+  const board = { id: uid(), title: `Tablero ${boards.length + 1}`, cells: Array(CELLS_PER_PAGE).fill(null) };
   boards.push(board); activeId = board.id; markDirty(); save(); render();
 }
 function addBlankPage(sourceBoardId = activeId) {
@@ -185,7 +188,7 @@ function addBlankPage(sourceBoardId = activeId) {
     semanticGenerated: Boolean(root.semanticGenerated),
     manualBlankPage: true,
     semanticPage: semanticSiblingBoards(root).length + 1,
-    cells: Array(16).fill(null)
+    cells: Array(CELLS_PER_PAGE).fill(null)
   };
   boards.push(newPage);
   activeId = newPage.id;
@@ -195,7 +198,7 @@ function addBlankPage(sourceBoardId = activeId) {
 }
 function deleteBoard() {
   if (boards.length === 1) {
-    boards[0] = { id: uid(), title: "Mi tablero", cells: Array(16).fill(null) };
+    boards[0] = { id: uid(), title: "Mi tablero", cells: Array(CELLS_PER_PAGE).fill(null) };
   } else boards = boards.filter(board => board.id !== activeId);
   activeId = boards[0].id; markDirty(); save(); render();
 }
@@ -259,18 +262,18 @@ async function addSemanticGroupToEditor(event) {
   base.title = sharedTitle;
   base.semanticRootId = base.semanticRootId || base.id;
   base.semanticGenerated = true;
-  for (let index = 0; index < unique.length; index += 16) {
-    const cells = unique.slice(index, index + 16);
+  for (let index = 0; index < unique.length; index += CELLS_PER_PAGE) {
+    const cells = unique.slice(index, index + CELLS_PER_PAGE);
     const target = index === 0 ? base : {
       id: uid(),
       title: sharedTitle,
       semanticParentId: base.id,
       semanticRootId: base.semanticRootId,
       semanticGenerated: true,
-      semanticPage: Math.floor(index / 16) + 1,
-      cells: Array(16).fill(null)
+      semanticPage: Math.floor(index / CELLS_PER_PAGE) + 1,
+      cells: Array(CELLS_PER_PAGE).fill(null)
     };
-    target.cells = [...cells, ...Array(Math.max(0, 16 - cells.length)).fill(null)];
+    target.cells = [...cells, ...Array(Math.max(0, CELLS_PER_PAGE - cells.length)).fill(null)];
     if (index > 0) {
       rememberNewDraft(target.id);
       boards.push(target);
@@ -359,7 +362,7 @@ function validateBoardPage(boardId) {
 
 function deleteBoardPage(boardId) {
   if (boards.length === 1) {
-    boards[0].cells = Array(16).fill(null);
+    boards[0].cells = Array(CELLS_PER_PAGE).fill(null);
     markDirty(); save();
     render();
     return;
@@ -379,7 +382,7 @@ function makeCell(cell, index, boardId = activeId) {
   article.tabIndex = 0;
   article.dataset.index = index;
   article.setAttribute("role", "group");
-  article.setAttribute("aria-label", `${cell.label}. Posición ${index + 1} de 16.`);
+  article.setAttribute("aria-label", `${cell.label}. Posición ${index + 1} de ${CELLS_PER_PAGE}.`);
   if (cell.imageData && !cell.normalized) normalizeStoredPng(cell);
   article.innerHTML = `<img alt=""><strong>${escapeHtml(cell.label)}</strong><div class="cell-actions"><button data-action="replace">Sustituir</button><button data-action="delete">Eliminar</button></div>`;
   setSafeImage(article.querySelector("img"), cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id), cell.label);
@@ -483,7 +486,7 @@ function makeEmptySlot(index, boardId = activeId) {
   empty.type = "button";
   empty.className = "empty-slot";
   empty.dataset.index = index;
-  empty.setAttribute("aria-label", `Agregar pictograma en la posición ${index + 1} de 16`);
+  empty.setAttribute("aria-label", `Agregar pictograma en la posición ${index + 1} de ${CELLS_PER_PAGE}`);
   empty.innerHTML = "<span>+ Agregar<br>pictograma</span>";
   empty.addEventListener("click", () => { activeId = boardId; openPicker(index); });
   empty.addEventListener("keydown", event => handleGridArrowNavigation(event, index));
@@ -753,7 +756,7 @@ function discardEditorSession() {
   }
   boards = structuredClone(editorSessionSnapshot.boards);
   activeId = editorSessionSnapshot.activeId;
-  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", cells: Array(16).fill(null) }];
+  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", cells: Array(CELLS_PER_PAGE).fill(null) }];
   semanticDraftDirty = false;
   editorDirty = false;
   semanticDraftSnapshots.clear();
@@ -788,7 +791,7 @@ function discardSemanticDraft() {
       boards[index] = snapshot;
     }
   }
-  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", cells: Array(16).fill(null) }];
+  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", cells: Array(CELLS_PER_PAGE).fill(null) }];
   activeId = boards[0].id;
   semanticDraftDirty = false;
   semanticDraftSnapshots.clear();
@@ -919,9 +922,10 @@ async function exportInBrowser(format, board) {
 }
 
 function makeWordCompatibleHtml(board) {
-  const cells = printableCells(board).map(cell => cell ? `<td><div class="picto-box"><img src="${escapeHtml(cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id))}" width="132" height="118" style="width:1.38in;height:1.23in;object-fit:contain;"><p>${escapeHtml(cell.label)}</p></div></td>` : "<td></td>");
-  const rows = [0, 4, 8, 12].map(start => `<tr>${cells.slice(start, start + 4).join("")}</tr>`).join("");
-  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:letter portrait;margin:.22in .34in .25in}body{font-family:Arial,sans-serif;color:#082f61;margin:0}.heading{text-align:center;margin:0 0 6pt;padding-bottom:4pt}.brand{display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.kicker{margin:2pt 0 1pt;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-block{text-align:center}.title-separator{width:80%;height:2pt;margin:3pt auto 4pt;background:#0757a5}h1{text-transform:uppercase;margin:0;font-size:20pt;line-height:1;color:#004b93}table{width:7.82in;table-layout:fixed;border-collapse:separate;border-spacing:5pt;margin:0 auto}tr{height:1.56in}td{width:1.84in;height:1.56in;border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle;padding:5pt;overflow:hidden}.picto-box{width:1.66in;height:1.42in;margin:0 auto;text-align:center;overflow:hidden}td img{display:block;width:1.38in;height:1.23in;margin:0 auto;border:0;object-fit:contain}td p{height:.24in;margin:1pt 0 0;color:#111;font-weight:bold;font-size:12pt;line-height:1.05;text-align:center;overflow:hidden}footer{font-size:4pt;line-height:1.1;text-align:center;color:#555;margin-top:4pt}</style></head><body><div class="heading"><img class="brand" src="${BOARD_HEADER_IMAGE}" width="445" height="69"><div class="title-block"><p class="kicker">Tablero de comunicaci&oacute;n por pictogramas</p><h1>${escapeHtml(board.title)}</h1></div><div class="title-separator"></div></div><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
+  const cells = printableCells(board).map(cell => cell ? `<td><div class="picto-box"><img src="${escapeHtml(cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id))}" width="112" height="94" style="width:1.16in;height:.98in;object-fit:contain;"><p>${escapeHtml(cell.label)}</p></div></td>` : "<td></td>");
+  const rows = Array.from({ length: Math.ceil(CELLS_PER_PAGE / COLUMNS_PER_PAGE) }, (_, row) => row * COLUMNS_PER_PAGE)
+    .map(start => `<tr>${cells.slice(start, start + COLUMNS_PER_PAGE).join("")}</tr>`).join("");
+  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:letter portrait;margin:.22in .34in .25in}body{font-family:Arial,sans-serif;color:#082f61;margin:0}.heading{text-align:center;margin:0 0 6pt;padding-bottom:4pt}.brand{display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.kicker{margin:2pt 0 1pt;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-block{text-align:center}.title-separator{width:80%;height:2pt;margin:3pt auto 4pt;background:#0757a5}h1{text-transform:uppercase;margin:0;font-size:20pt;line-height:1;color:#004b93}table{width:7.82in;table-layout:fixed;border-collapse:separate;border-spacing:4pt;margin:0 auto}tr{height:1.23in}td{width:1.84in;height:1.23in;border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle;padding:4pt;overflow:hidden}.picto-box{width:1.66in;height:1.12in;margin:0 auto;text-align:center;overflow:hidden}td img{display:block;width:1.16in;height:.98in;margin:0 auto;border:0;object-fit:contain}td p{height:.22in;margin:1pt 0 0;color:#111;font-weight:bold;font-size:10pt;line-height:1.05;text-align:center;overflow:hidden}footer{font-size:4pt;line-height:1.1;text-align:center;color:#555;margin-top:4pt}</style></head><body><div class="heading"><img class="brand" src="${BOARD_HEADER_IMAGE}" width="445" height="69"><div class="title-block"><p class="kicker">Tablero de comunicaci&oacute;n por pictogramas</p><h1>${escapeHtml(board.title)}</h1></div><div class="title-separator"></div></div><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
 }
 
 async function makeBoardSvgImage(board) {
@@ -955,7 +959,7 @@ async function makeBoardSvgImage(board) {
 }
 
 function printableCells(board) {
-  return Array.from({ length: 16 }, (_, index) => board.cells?.[index] || null);
+  return Array.from({ length: CELLS_PER_PAGE }, (_, index) => board.cells?.[index] || null);
 }
 
 function escapeSvg(value = "") {
@@ -973,7 +977,7 @@ async function exportBoardHtml() {
 <title>${escapeHtml(board.title)}</title><style>
 @page{size:letter portrait;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif}
 .page{position:relative;width:8.5in;height:11in;padding:4.2mm 12mm 12mm;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
-.heading{min-height:150px;padding-bottom:5px;border-bottom:3px solid #004b93;text-align:center}.header-top{width:calc(100% + 20mm);margin:-2mm -10mm 3px;display:block}.brand-image{display:block;width:58.4%;height:1.16in;object-fit:contain;object-position:left top}.title-block{padding-top:3px;text-align:center}.kicker{margin:0 0 1px;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-separator{width:80%;height:2px;margin:3px auto 4px;background:#004b93}h1{color:#004b93;margin:0;font-size:23pt;line-height:1;text-transform:uppercase}.grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:7px;min-height:0}
+.heading{min-height:150px;padding-bottom:5px;border-bottom:3px solid #004b93;text-align:center}.header-top{width:calc(100% + 20mm);margin:-2mm -10mm 3px;display:block}.brand-image{display:block;width:58.4%;height:1.16in;object-fit:contain;object-position:left top}.title-block{padding-top:3px;text-align:center}.kicker{margin:0 0 1px;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-separator{width:80%;height:2px;margin:3px auto 4px;background:#004b93}h1{color:#004b93;margin:0;font-size:23pt;line-height:1;text-transform:uppercase}.grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,1fr);gap:7px;min-height:0}
 .cell,.empty{min-height:0;border:2.5px solid #0757a5;border-radius:10px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center}
 .empty{border-style:dashed;border-color:#aaa}.cell img{width:100%;height:calc(100% - 32px);object-fit:contain}.cell strong{font-size:15pt;line-height:1.05}
 footer{position:absolute;left:12mm;right:12mm;bottom:5mm;padding-top:4px;border-top:1px solid #777;font-size:4.5pt;line-height:1.15;text-align:center;background:#fff}

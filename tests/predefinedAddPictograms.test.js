@@ -9,6 +9,6 @@ test("los tableros predefinidos permiten agregar pictogramas y grupos semántico
   assert.match(source, /Agregar grupo semántico de pictogramas/);
   assert.match(source, /Agregar pictograma/);
   assert.match(source, /searchAllProviders\(\[term\], "es", mode === "single" \? 12 : 40\)/);
-  assert.match(source, /chunk\(boardPictograms\(board\), 16\)/);
+  assert.match(source, /chunk\(boardPictograms\(board\), APP_CONFIG\.pictogramsPerPage\)/);
   assert.match(source, /Grupo semántico:/);
 });

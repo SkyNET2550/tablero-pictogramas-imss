@@ -80,7 +80,7 @@ input { font: inherit; }
 .predefined-letter-header p, .predefined-letter-header h2, .predefined-letter-header span { margin: 3px 0; }
 .predefined-letter-header p { color: #0757a5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .predefined-letter-header h2 { color: #073b73; font-size: 25px; text-transform: uppercase; }
-.predefined-pictogram-grid { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 7px; padding-top: 9px; }
+.predefined-pictogram-grid { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); gap: 7px; padding-top: 9px; }
 .predefined-pictogram-card, .predefined-empty-cell { min-height: 0; padding: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; border: 2px solid #0757a5; border-radius: 9px; text-align: center; }
 .predefined-pictogram-card img { width: 100%; height: calc(100% - 40px); min-height: 90px; object-fit: contain; }
 .predefined-pictogram-card strong { font-size: 15px; line-height: 1.05; }
@@ -135,7 +135,7 @@ input { font: inherit; }
 .board-header > .board-description { margin: 4px 0 0; font-size: 10.5pt; }
 .board-header .board-institutional-text p { margin: 0; font-size: 8.8pt; line-height: 1.15; }
 .editor-board-header .board-institutional-text p { margin: 0; font-size: 7.6pt; line-height: 1.15; }
-.grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 7px; }
+.grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); gap: 7px; }
 .cell { min-height: 0; border: 2.5px solid #0757a5; border-radius: 10px; padding: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; overflow: hidden; }
 .cell img { width: 100%; height: calc(100% - 31px); min-height: 0; padding: 0; object-fit: contain; object-position: center; }
 .cell-label { font-size: 15pt; font-weight: 700; line-height: 1.02; }
@@ -177,10 +177,10 @@ dialog::backdrop { background: #001b31cc; }
 .editor-board-header .board-institutional-text { height: 1.02in; padding: 0 4px 2px 0; justify-content: flex-end; }
 .editor-board-header .board-institutional-text p { margin: 0; font-size: 7.6pt; line-height: 1.15; }
 .editor-board-header h1 { margin: 0; color: #073b73; }
-.editor-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; min-height: 0; }
-.editor-cell { position: relative; min-height: 120px; border: 2px solid #0757a5; border-radius: 9px; padding: 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: #fff; cursor: grab; }
+.editor-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); gap: 6px; min-height: 0; }
+.editor-cell { position: relative; min-height: 98px; border: 2px solid #0757a5; border-radius: 9px; padding: 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: #fff; cursor: grab; }
 .editor-cell.selected { outline: 5px solid #ffb000; }
-.editor-cell img { width: 100%; height: 112px; padding: 0; object-fit: contain; object-position: center; }
+.editor-cell img { width: 100%; height: 92px; padding: 0; object-fit: contain; object-position: center; }
 .editor-cell strong { position: relative; z-index: 3; display: block; width: 100%; min-height: 28px; padding: 3px 4px; text-align: center; cursor: text; background: #fff; border-radius: 5px; }
 .editor-cell strong:hover, .editor-cell strong:focus { color: #0757a5; text-decoration: underline; text-decoration-thickness: 1px; outline: 2px solid #f6b400; outline-offset: 1px; }
 .editor-cell.editing-label .cell-actions { display: none; }

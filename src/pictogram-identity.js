@@ -23,7 +23,7 @@ export function hasPictogramDuplicate(cells = [], candidate, ignoredIndex = -1) 
   return cells.some((cell, index) => index !== ignoredIndex && cell && pictogramKey(cell) === key);
 }
 
-export function removeBoardDuplicates(cells = [], size = 16) {
+export function removeBoardDuplicates(cells = [], size = 20) {
   const unique = deduplicatePictograms(cells.filter(Boolean));
   return [...unique.slice(0, size), ...Array(Math.max(0, size - unique.length)).fill(null)];
 }

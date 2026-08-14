@@ -5,6 +5,7 @@ import { INSTITUTIONAL_FOOTER } from "../config.js";
 import { deduplicatePictograms } from "../pictogram-identity.js";
 import { closeAccessibleDialog, installDialogFocusManagement, showAccessibleDialog } from "../dialog-focus.js";
 import { safeImageUrl } from "../security.js";
+import { APP_CONFIG } from "../config/appConfig.js";
 
 const subboards = seedBoards.filter(board => board.level === "subboard");
 const customPictograms = new Map();
@@ -104,7 +105,7 @@ function renderSequence(boards) {
 }
 async function completeBoard(board, page) {
   if (!page) return;
-  if (boardPictograms(board).length >= 16) {
+  if (boardPictograms(board).length >= APP_CONFIG.pictogramsPerPage) {
     page.classList.remove("loading-pictograms");
     return;
   }
@@ -172,7 +173,7 @@ async function addRequestedPictograms(event) {
 }
 
 function boardPagesHtml(board, pagePrefix = "Página", loading = false) {
-  const pages = chunk(boardPictograms(board), 16);
+  const pages = chunk(boardPictograms(board), APP_CONFIG.pictogramsPerPage);
   return pages.map((selected, index) => {
     const groups = [...new Set(selected.map(item => item.semanticGroup).filter(Boolean))];
     const groupLabel = groups.length ? `Grupo semántico: ${groups.join(" · ")}` : "";
@@ -240,7 +241,7 @@ function boardPageHtml(board, selected, loading = false, groupLabel = "") {
       <img src="${escapeAttr(safeImageUrl(item.imageUrl) || `./assets/pictograms/${item.group}/${slug(item.term)}.png`)}" alt="${escapeAttr(item.term)}">
       <strong>${escapeHtml(sentenceCase(item.term))}</strong>
       <small>${escapeHtml(item.source || item.provider || "ARASAAC")}</small>
-    </article>`).join("")}${Array.from({ length: Math.max(0, 16 - selected.length) }, () => '<div class="predefined-empty-cell" aria-hidden="true"></div>').join("")}</div>
+    </article>`).join("")}${Array.from({ length: Math.max(0, APP_CONFIG.pictogramsPerPage - selected.length) }, () => '<div class="predefined-empty-cell" aria-hidden="true"></div>').join("")}</div>
     <footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer>
   </section>`;
 }

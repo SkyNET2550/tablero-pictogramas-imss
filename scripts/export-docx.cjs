@@ -31,7 +31,10 @@ const MARGIN_BOTTOM = 360;  // 0.25 in
 const MARGIN_LEFT = 490;    // 0.34 in
 const TABLE_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
 const COLUMN_WIDTH = Math.floor(TABLE_WIDTH / 4);
-const ROW_HEIGHT = 2250;
+const ROW_HEIGHT = 1740;
+const CELLS_PER_PAGE = 20;
+const ROWS_PER_PAGE = 5;
+const COLUMNS_PER_PAGE = 4;
 const BLUE = "0757A5";
 
 const children = [];
@@ -72,13 +75,13 @@ children.push(new Paragraph({
 }));
 
 const cells = [...(board.cells || [])];
-while (cells.length < 16) cells.push(null);
+while (cells.length < CELLS_PER_PAGE) cells.push(null);
 
 const rows = [];
-for (let r = 0; r < 4; r += 1) {
+for (let r = 0; r < ROWS_PER_PAGE; r += 1) {
   const row = [];
-  for (let c = 0; c < 4; c += 1) {
-    row.push(makeCell(cells[r * 4 + c]));
+  for (let c = 0; c < COLUMNS_PER_PAGE; c += 1) {
+    row.push(makeCell(cells[r * COLUMNS_PER_PAGE + c]));
   }
   rows.push(new TableRow({
     children: row,
@@ -120,15 +123,15 @@ function makeCell(cell) {
       content.push(new Paragraph({
         children: [new ImageRun({
           data,
-          transformation: { width: 132, height: 118 },
+          transformation: { width: 112, height: 94 },
           type: imageType(cell)
         })],
         alignment: AlignmentType.CENTER,
-        spacing: { after: 25 }
+        spacing: { after: 16 }
       }));
     }
     content.push(new Paragraph({
-      children: [new TextRun({ text: cell.label, bold: true, size: 24 })],
+      children: [new TextRun({ text: cell.label, bold: true, size: 20 })],
       alignment: AlignmentType.CENTER,
       spacing: { before: 0, after: 0 }
     }));
@@ -138,7 +141,7 @@ function makeCell(cell) {
     children: content.length ? content : [new Paragraph("")],
     width: { size: COLUMN_WIDTH, type: WidthType.DXA },
     verticalAlign: VerticalAlign.CENTER,
-    margins: { top: 90, bottom: 90, left: 90, right: 90 },
+    margins: { top: 55, bottom: 55, left: 70, right: 70 },
     borders: allBorders()
   });
 }

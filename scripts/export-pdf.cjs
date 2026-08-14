@@ -8,7 +8,8 @@ const payload = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 const board = payload.board || {};
 const temporaryHtml = `${outputPath}.html`;
 
-const cells = Array.from({ length: 16 }, (_, index) => {
+const CELLS_PER_PAGE = 20;
+const cells = Array.from({ length: CELLS_PER_PAGE }, (_, index) => {
   const pictogram = board.cells?.[index] || board.pictograms?.[index];
   if (!pictogram) return '<div class="cell empty"></div>';
   return `<div class="cell"><img src="${escapeHtml(resolveImage(pictogram.imageUrl || pictogram.image))}" alt=""><strong>${escapeHtml(pictogram.label || pictogram.term || "")}</strong></div>`;
@@ -19,7 +20,7 @@ const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>
 .page{width:8.5in;height:11in;padding:.22in .34in .25in;display:flex;flex-direction:column;background:#fff}
 .brand{width:58%;height:.72in;object-fit:contain;object-position:left center}
 h1{font-size:24px;text-align:center;text-transform:uppercase;margin:4px 0 8px;border-bottom:3px solid #0757a5;padding-bottom:6px}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:6px;flex:1}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,1fr);gap:6px;flex:1}
 .cell{border:2px solid #0757a5;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px;overflow:hidden}
 .cell.empty{border-style:dashed;border-color:#9ab0c5}.cell img{width:100%;height:calc(100% - 28px);object-fit:contain}.cell strong{font-size:16px;text-align:center;color:#111}
 footer{font-size:6px;line-height:1.1;text-align:center;margin-top:5px;color:#444}

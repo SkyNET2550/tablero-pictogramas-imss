@@ -16,6 +16,7 @@ import { institutionalHeaderHtml } from "./board-branding.js";
 import { INSTITUTIONAL_FOOTER } from "./config.js";
 import { setSafeImage } from "./security.js";
 import { installMonitoring } from "./monitoring.js";
+import { APP_CONFIG } from "./config/appConfig.js";
 
 const container = document.querySelector("#boards-container");
 installMonitoring();
@@ -204,7 +205,7 @@ async function generateBoardFromPictogram(term) {
 }
 
 function buildSemanticBoardPages(query, items) {
-  const pages = chunk(items, 16);
+  const pages = chunk(items, APP_CONFIG.pictogramsPerPage);
   return pages.map((pageItems, index) => {
     const page = document.createElement("section");
     page.className = "page semantic-generated-board";
@@ -221,7 +222,7 @@ function buildSemanticBoardPages(query, items) {
       cell.append(image, label);
       grid.append(cell);
     }
-    while (grid.children.length < 16) {
+    while (grid.children.length < APP_CONFIG.pictogramsPerPage) {
       const cell = document.createElement("article");
       cell.className = "cell missing-cell";
       cell.innerHTML = `<button class="missing-pictogram" type="button"><span>Sin pictograma</span><small>Agregar pictograma</small></button>`;

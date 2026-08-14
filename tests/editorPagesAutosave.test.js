@@ -12,7 +12,7 @@ test("el constructor permite agregar una página desde los controles de la pági
   assert.match(editor, /boards\.find\(item => item\.id === sourceBoardId\)/);
   assert.match(editor, /manualBlankPage:\s*true/);
   assert.match(editor, /semanticParentId:\s*root\.id/);
-  assert.match(editor, /cells:\s*Array\(16\)\.fill\(null\)/);
+  assert.match(editor, /cells:\s*Array\(CELLS_PER_PAGE\)\.fill\(null\)/);
 });
 
 test("el editor mueve pictogramas entre páginas disponibles", async () => {
