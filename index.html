@@ -98,6 +98,16 @@
           <input id="open-editable-input" type="file" accept=".PICTIMS,.pictims,application/x-pictims+json" hidden>
           <button id="delete-board-button" class="danger" type="button">Eliminar tablero</button>
         </section>
+        <section class="sidebar-actions sidebar-config-actions" aria-label="Configuración del tablero">
+          <h3>Configuración</h3>
+          <fieldset class="orientation-options" aria-label="Disposición del tablero">
+            <legend class="visually-hidden">Disposición del tablero</legend>
+            <label><input id="orientation-vertical" name="board-orientation" type="radio" value="vertical" checked> Vertical</label>
+            <label><input id="orientation-horizontal" name="board-orientation" type="radio" value="horizontal"> Horizontal</label>
+          </fieldset>
+          <button id="attach-template-button" type="button">Adjuntar plantilla</button>
+          <input id="template-file-input" type="file" accept="image/png" hidden>
+        </section>
         <section class="sidebar-actions" aria-label="Acciones del tablero">
           <h3>Acciones</h3>
           <button id="export-pdf-button" type="button">Exportar PDF</button>

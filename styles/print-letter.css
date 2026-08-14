@@ -158,6 +158,9 @@ dialog::backdrop { background: #001b31cc; }
 .sidebar-actions { display: grid; gap: 5px; padding: 9px; border: 1px solid #b2c2d1; border-radius: 8px; background: #edf3f8; }
 .sidebar-actions h3 { margin: 0 0 3px; color: #526879; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
 .sidebar-actions button { min-height: 31px; padding: 4px 7px; font-size: 13px; line-height: 1.1; }
+.orientation-options { display: grid; gap: 4px; margin: 0; padding: 0; border: 0; }
+.orientation-options label { display: flex; align-items: center; gap: 6px; min-height: 24px; color: #003b73; font-size: 13px; font-weight: 700; }
+.orientation-options input { width: 14px; height: 14px; accent-color: #07848b; }
 .danger { color: #8a1c1c; }
 .editor-workspace { padding: 14px; overflow: auto; }
 .editor-properties { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 12px; }
@@ -329,6 +332,7 @@ dialog::backdrop { background: #001b31cc; }
   .subboard-actions button { min-height: 30px; padding: 3px 6px; font-size: 8px; }
   .sidebar-actions { padding: 6px; gap: 3px; }
   .sidebar-actions button { min-height: 29px; padding: 3px 5px; font-size: 10px; }
+  .orientation-options label { min-height: 22px; font-size: 10px; }
   .editor-sidebar > button { min-height: 31px; padding: 4px 6px; font-size: 10px; }
   .confirmation-actions button, .picker-card button, .cell-actions button { min-height: 30px; padding: 3px 6px; font-size: 9px; }
   .predefined-page-tools { font-size: 9px; }

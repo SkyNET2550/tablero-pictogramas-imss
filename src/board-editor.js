@@ -18,6 +18,7 @@ const page = document.querySelector("#editor-page");
 const list = document.querySelector("#board-list");
 const titleInput = document.querySelector("#editor-title");
 const semanticDialog = document.querySelector("#editor-semantic-dialog");
+const orientationInputs = document.querySelectorAll('input[name="board-orientation"]');
 let boards = loadBoards();
 let activeId = boards[0].id;
 let replaceIndex = null;
@@ -49,6 +50,9 @@ export function initBoardEditor() {
   document.querySelector("#save-editable-button").addEventListener("click", saveCurrentEditableBoard);
   document.querySelector("#open-editable-button").addEventListener("click", openEditableBoardDialog);
   document.querySelector("#open-editable-input").addEventListener("change", openEditableBoard);
+  document.querySelector("#attach-template-button").addEventListener("click", () => document.querySelector("#template-file-input").click());
+  document.querySelector("#template-file-input").addEventListener("change", attachBoardTemplate);
+  orientationInputs.forEach(input => input.addEventListener("change", updateBoardOrientation));
   document.querySelector("#picker-search").addEventListener("submit", searchPicker);
   document.querySelector("#png-file-input").addEventListener("change", selectPngFile);
   document.querySelector("#picker-label").addEventListener("blur", event => {
@@ -127,7 +131,22 @@ function loadBoards() {
 function normalizeBoard(board) {
   const cells = Array.isArray(board.cells) ? board.cells.slice(0, CELLS_PER_PAGE) : [];
   while (cells.length < CELLS_PER_PAGE) cells.push(null);
-  return { ...board, cells: removeBoardDuplicates(cells, CELLS_PER_PAGE) };
+  return {
+    ...board,
+    orientation: board.orientation === "horizontal" ? "horizontal" : "vertical",
+    template: normalizeTemplate(board.template),
+    cells: removeBoardDuplicates(cells, CELLS_PER_PAGE)
+  };
+}
+
+function normalizeTemplate(template) {
+  if (!template || typeof template !== "object") return null;
+  if (typeof template.dataUrl !== "string" || !template.dataUrl.startsWith("data:image/png")) return null;
+  return {
+    name: typeof template.name === "string" ? template.name : "plantilla.png",
+    dataUrl: template.dataUrl,
+    attachedAt: template.attachedAt || null
+  };
 }
 function save() {
   safeSetLocalStorage(STORAGE_KEY, JSON.stringify(boards));
@@ -290,6 +309,7 @@ function render() {
   renderList(); renderPage();
   const board = activeBoard();
   titleInput.value = board.title;
+  renderConfiguration(board);
 }
 function renderList() {
   list.replaceChildren();
@@ -312,6 +332,49 @@ function renderPage() {
   }
   page.classList.remove("editor-page-sequence");
   page.append(...makeBoardPage(board, 0, 1).childNodes);
+}
+
+function renderConfiguration(board) {
+  const orientation = board?.orientation === "horizontal" ? "horizontal" : "vertical";
+  orientationInputs.forEach(input => { input.checked = input.value === orientation; });
+  const templateButton = document.querySelector("#attach-template-button");
+  if (templateButton) {
+    templateButton.textContent = board?.template?.name ? `Plantilla: ${board.template.name}` : "Adjuntar plantilla";
+    templateButton.title = board?.template?.name ? `Plantilla adjunta: ${board.template.name}` : "Adjuntar plantilla PNG";
+  }
+}
+
+function updateBoardOrientation(event) {
+  const board = activeBoard();
+  if (!board || !event.target.checked) return;
+  board.orientation = event.target.value === "horizontal" ? "horizontal" : "vertical";
+  markDirty(); save(); renderConfiguration(board);
+}
+
+function attachBoardTemplate(event) {
+  const board = activeBoard();
+  const file = event.target.files?.[0];
+  if (!board || !file) return;
+  if (file.type !== "image/png" && !file.name.toLowerCase().endsWith(".png")) {
+    alert("La plantilla debe estar en formato PNG.");
+    event.target.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    board.template = {
+      name: file.name,
+      dataUrl: String(reader.result || ""),
+      attachedAt: new Date().toISOString()
+    };
+    markDirty(); save(); renderConfiguration(board);
+    event.target.value = "";
+  }, { once: true });
+  reader.addEventListener("error", () => {
+    alert("No fue posible adjuntar la plantilla. Verifica el archivo PNG.");
+    event.target.value = "";
+  }, { once: true });
+  reader.readAsDataURL(file);
 }
 
 function semanticSiblingBoards(board) {
