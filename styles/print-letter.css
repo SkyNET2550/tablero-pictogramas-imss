@@ -75,8 +75,8 @@ input { font: inherit; }
 .predefined-letter-page { position: relative; width: min(8.5in, 100%); min-height: 11in; margin: 14px auto; padding: 12mm 12mm 15mm; display: flex; flex-direction: column; background: #fff; box-shadow: 0 3px 18px #0003; }
 .predefined-letter-header { padding-bottom: 8px; border-bottom: 3px solid #0757a5; text-align: center; }
 .predefined-letter-header .board-header-top { width: 100%; margin: 0 0 2px; text-align: left; }
-.predefined-board-brand-image { display: block; width: 58%; height: .72in; object-fit: contain; object-position: left center; }
-.predefined-letter-header .board-title-block { padding-top: 0; }
+.predefined-board-brand-image { display: block; width: 100%; height: .72in; object-fit: contain; object-position: left center; }
+.predefined-letter-header .board-title-block { padding: 0 0 5px; }
 .predefined-letter-header p, .predefined-letter-header h2, .predefined-letter-header span { margin: 3px 0; }
 .predefined-letter-header p { color: #0757a5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .predefined-letter-header h2 { color: #073b73; font-size: 25px; text-transform: uppercase; }
@@ -121,14 +121,14 @@ input { font: inherit; }
 .page { position: relative; width: 8.5in; height: 11in; margin: 18px auto; padding: 4.2mm 12mm 12mm; page-break-after: always; break-after: page; overflow: hidden; background: #fff; display: flex; flex-direction: column; box-shadow: 0 3px 18px #0003; }
 .page:last-child { page-break-after: auto; }
 .board-header { min-height: 150px; padding-bottom: 5px; border-bottom: 3px solid #004b93; text-align: center; margin-bottom: 8px; }
-.board-header-top { width: calc(100% + 20mm); margin: -2mm -10mm 3px; display: block; }
-.board-brand-image { display: block; width: 58.4%; height: 1.16in; object-fit: contain; object-position: left top; }
+.board-header-top { width: 100%; margin: 0 0 3px; display: grid; grid-template-columns: 58.4% minmax(0, 1fr); gap: 12px; align-items: end; text-align: left; }
+.board-brand-image { display: block; width: 100%; height: 1.16in; object-fit: contain; object-position: left top; }
 .board-institutional-text { height: 1.16in; padding: 0 5px 2px 0; display: flex; flex-direction: column; justify-content: flex-end; font-family: "Noto Sans", Arial, sans-serif; text-align: right; }
 .board-institutional-text p { margin: 0; font-size: 8.8pt; line-height: 1.15; }
 .board-institutional-text .main-area { font-weight: 700; }
-.board-title-block { padding: 3px 0 0; text-align: center; }
+.board-title-block { min-width: 0; padding: 0 0 5px; text-align: left; }
 .board-kicker { margin: 0 0 1px; color: #004b93; font-size: 11pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.board-title-separator { width: 80%; height: 2px; margin: 3px auto 4px; background: #004b93; }
+.board-title-separator { width: 100%; height: 2px; margin: 3px 0 4px; background: #004b93; }
 .board-title-block h1 { margin: 0; color: #004b93; font-size: 23pt; line-height: 1; text-transform: uppercase; }
 .board-description { margin: 3px 0 0; font-size: 9.5pt; }
 .board-header h1 { margin: 0; color: #073b73; font-size: 23pt; }
@@ -172,8 +172,8 @@ dialog::backdrop { background: #001b31cc; }
 .editor-page-controls span { margin-right: auto; font-weight: 700; }
 .editor-page-controls button { min-height: 30px; padding: 4px 8px; font-size: 12px; }
 .editor-board-header { min-height: 142px; padding-bottom: 5px; border-bottom: 3px solid #004b93; text-align: center; }
-.editor-board-header .board-header-top { width: calc(100% + 14mm); margin: -1.5mm -7mm 3px; display: block; }
-.editor-board-brand-image { display: block; width: 58.4%; height: 1.02in; object-fit: contain; object-position: left top; }
+.editor-board-header .board-header-top { width: 100%; margin: 0 0 3px; display: grid; grid-template-columns: 58.4% minmax(0, 1fr); gap: 10px; align-items: end; }
+.editor-board-brand-image { display: block; width: 100%; height: 1.02in; object-fit: contain; object-position: left top; }
 .editor-board-header .board-institutional-text { height: 1.02in; padding: 0 4px 2px 0; justify-content: flex-end; }
 .editor-board-header .board-institutional-text p { margin: 0; font-size: 7.6pt; line-height: 1.15; }
 .editor-board-header h1 { margin: 0; color: #073b73; }
