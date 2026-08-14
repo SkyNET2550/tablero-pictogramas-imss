@@ -2,7 +2,6 @@ import { INSTITUTIONAL_FOOTER } from "./config.js";
 import { getPictogramImageUrl, resolvePictogram } from "./arasaac-api.js";
 import { recordMetadata, recordMissing } from "./metadata-store.js";
 import { institutionalHeaderHtml } from "./board-branding.js";
-import { pictogramKey } from "./pictogram-identity.js";
 import { escapeHtml, setSafeImage, safeImageUrl } from "./security.js";
 
 const capitalize = text => {
@@ -17,19 +16,15 @@ export async function buildBoardPage(group, selections, language = "es") {
   page.innerHTML = `<header class="board-header">${institutionalHeaderHtml(escapeHtml(group.titulo))}<p class="board-description">${escapeHtml(group.descripcion || "Tablero de comunicación alternativa por pictogramas")}</p></header>`;
   const grid = document.createElement("main");
   grid.className = "grid";
-  const usedPictograms = new Set();
-
   for (const term of group.conceptos) {
     const cell = document.createElement("article");
     cell.className = "cell";
     const result = await resolvePictogram(term, selections, language);
-    const duplicate = result && usedPictograms.has(pictogramKey(result));
-    if (result && !duplicate) usedPictograms.add(pictogramKey(result));
-    if (result?.imageData && !duplicate) {
+    if (result?.imageData) {
       const image = document.createElement("img"); setSafeImage(image, result.imageData, result.label || term);
       const label = document.createElement("div"); label.className = "cell-label"; label.textContent = capitalize(result.label || term);
       cell.append(image, label);
-    } else if (result?._id && !duplicate) {
+    } else if (result?._id) {
       const localUrl = `./assets/pictograms/${group.id}/${slug(term)}.png`;
       const remoteUrl = result.imageUrl || getPictogramImageUrl(result._id);
       const image = document.createElement("img"); setSafeImage(image, localUrl, term); image.dataset.fallback = safeImageUrl(remoteUrl);
@@ -43,7 +38,7 @@ export async function buildBoardPage(group, selections, language = "es") {
     } else {
       cell.classList.add("missing-cell");
       const button = document.createElement("button"); button.className = "missing-pictogram"; button.type = "button"; button.setAttribute("aria-label", `Elegir pictograma para ${term}`);
-      const state = document.createElement("span"); state.textContent = duplicate ? "Pictograma repetido" : "Sin pictograma";
+      const state = document.createElement("span"); state.textContent = "Sin pictograma";
       const help = document.createElement("small"); help.textContent = "Elegir o sustituir"; button.append(state, help);
       const label = document.createElement("div"); label.className = "cell-label"; label.textContent = capitalize(term); cell.append(button, label);
       cell.querySelector("button").addEventListener("click", () => {

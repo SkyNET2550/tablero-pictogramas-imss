@@ -2,7 +2,6 @@ import { INSTITUTIONAL_FOOTER } from "./config.js";
 import { getPictogramImageUrl } from "./arasaac-api.js";
 import { BOARD_HEADER_IMAGE, BOARD_INSTITUTION_LINES, institutionalHeaderHtml } from "./board-branding.js";
 import { searchAllProviders } from "./providers/provider-registry.js";
-import { deduplicatePictograms, hasPictogramDuplicate, removeBoardDuplicates } from "./pictogram-identity.js";
 import { closeAccessibleDialog, installDialogFocusManagement, showAccessibleDialog } from "./dialog-focus.js";
 import { setSafeImage } from "./security.js";
 import { loadBoardsFromBrowser, saveBoardsToBrowser } from "./browser-storage.js";
@@ -72,7 +71,6 @@ export function initBoardEditor() {
   document.querySelector("#template-file-input").addEventListener("change", attachBoardTemplate);
   orientationInputs.forEach(input => input.addEventListener("change", updateBoardOrientation));
   Object.values(boardStyleControls).filter(Boolean).forEach(control => control.addEventListener("input", updateBoardStyle));
-  document.querySelector("#apply-board-design-button")?.addEventListener("click", updateBoardStyle);
   document.querySelector("#reset-board-design-button")?.addEventListener("click", resetBoardStyle);
   document.querySelector("#picker-search").addEventListener("submit", searchPicker);
   document.querySelector("#png-file-input").addEventListener("change", selectPngFile);
@@ -157,7 +155,7 @@ function normalizeBoard(board) {
     orientation: board.orientation === "horizontal" ? "horizontal" : "vertical",
     template: normalizeTemplate(board.template),
     style: normalizeBoardStyle(board.style),
-    cells: removeBoardDuplicates(cells, CELLS_PER_PAGE)
+    cells: cells.slice(0, CELLS_PER_PAGE)
   };
 }
 
@@ -340,8 +338,7 @@ async function addSemanticGroupToEditor(event) {
       });
     }
   }
-  const unique = deduplicatePictograms(collected);
-  if (!unique.length) {
+  if (!collected.length) {
     status.textContent = "No se encontraron pictogramas para esta lista.";
     return;
   }
@@ -352,8 +349,8 @@ async function addSemanticGroupToEditor(event) {
   base.semanticRootId = base.semanticRootId || base.id;
   base.semanticGenerated = true;
   base.style = normalizeBoardStyle(base.style);
-  for (let index = 0; index < unique.length; index += CELLS_PER_PAGE) {
-    const cells = unique.slice(index, index + CELLS_PER_PAGE);
+  for (let index = 0; index < collected.length; index += CELLS_PER_PAGE) {
+    const cells = collected.slice(index, index + CELLS_PER_PAGE);
     const target = index === 0 ? base : {
       id: uid(),
       title: sharedTitle,
@@ -892,10 +889,6 @@ function confirmPictogram() {
 }
 function choosePictogram(selection) {
   const cell = { ...selection, validated: false };
-  if (hasPictogramDuplicate(activeBoard().cells, cell, replaceIndex ?? -1)) {
-    document.querySelector("#picker-status").textContent = "Este pictograma ya está incluido en el tablero. Elige una imagen diferente.";
-    return;
-  }
   if (replaceIndex === null) {
     const emptyIndex = activeBoard().cells.findIndex(item => item === null);
     if (emptyIndex < 0) return;

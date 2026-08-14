@@ -2,7 +2,6 @@ import { seedBoards } from "../data/boards/seedBoards.js";
 import { searchAllProviders } from "../providers/provider-registry.js";
 import { institutionalHeaderHtml } from "../board-branding.js";
 import { INSTITUTIONAL_FOOTER } from "../config.js";
-import { deduplicatePictograms } from "../pictogram-identity.js";
 import { closeAccessibleDialog, installDialogFocusManagement, showAccessibleDialog } from "../dialog-focus.js";
 import { safeImageUrl } from "../security.js";
 import { APP_CONFIG } from "../config/appConfig.js";
@@ -254,7 +253,7 @@ function printBoardPage(page) {
 }
 
 function deduplicate(items) {
-  return deduplicatePictograms(items.filter(item => item.term));
+  return items.filter(item => item.term);
 }
 function providerName(provider) { return ({ arasaac: "ARASAAC", globalsymbols: "Global Symbols", opensymbols: "OpenSymbols", symbotalk: "SymboTalk" })[provider] || provider; }
 function findRelated(board) {

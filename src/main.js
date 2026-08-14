@@ -192,10 +192,10 @@ async function generateBoardFromPictogram(term) {
       license: item.license,
       providerName: item.providerOriginal || item.provider
     })), semantic);
-    const unique = uniquePictograms(ranked).slice(0, 64);
-    container.replaceChildren(...buildSemanticBoardPages(query, unique));
-    status.textContent = unique.length
-      ? `Tablero semántico generado para “${query}” con ${unique.length} pictogramas sin repetir.`
+    const results = ranked.slice(0, 64);
+    container.replaceChildren(...buildSemanticBoardPages(query, results));
+    status.textContent = results.length
+      ? `Tablero semántico generado para “${query}” con ${results.length} pictogramas.`
       : `No se encontraron pictogramas relacionados con “${query}”.`;
   } catch (error) {
     console.error(error);
@@ -237,16 +237,6 @@ function buildSemanticBoardPages(query, items) {
   });
 }
 
-function uniquePictograms(items) {
-  const seen = new Set();
-  return items.filter(item => {
-    const key = normalizeKey(item.imageUrl || item.label || "");
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 function chunk(items, size) {
   const pages = [];
   for (let index = 0; index < items.length; index += size) pages.push(items.slice(index, index + size));
@@ -260,10 +250,6 @@ function sentenceCase(text = "") {
 
 function slug(text = "") {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
-function normalizeKey(value = "") {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\?.*$/, "").replace(/[^a-z0-9/:._-]+/g, "");
 }
 
 function resetInitialRoute() {

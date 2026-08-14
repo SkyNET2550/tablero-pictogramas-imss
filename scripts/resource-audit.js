@@ -5,7 +5,11 @@ import { execFileSync } from "node:child_process";
 const failures = [];
 const tracked = await listProjectFiles();
 for (const file of tracked) {
-  const text = await readFile(file, "utf8");
+  const text = await readFile(file, "utf8").catch(error => {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  });
+  if (text === null) continue;
   if (/[\u00c3\u00c2]/.test(text)) failures.push(`${file}: posible texto mal codificado`);
   if (file.endsWith(".js")) {
     for (const match of text.matchAll(/(?:from\s+|import\s*)["'](\.{1,2}\/[^"']+)["']/g)) {
