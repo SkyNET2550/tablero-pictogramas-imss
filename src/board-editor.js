@@ -92,6 +92,7 @@ export function openPredefinedBoardEditor(predefinedBoard) {
       predefinedId: predefinedBoard.id,
       title: predefinedBoard.title,
       orientation: "portrait",
+      templates: defaultTemplates(),
       template: null,
       cells: Array(16).fill(null)
     };
@@ -124,23 +125,33 @@ export function choosePictogramForConcept({ term, groupId, onSelected }) {
 
 function activeBoard() { return boards.find(board => board.id === activeId); }
 function uid() { return `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+function defaultTemplates() { return { portrait: null, landscape: null }; }
+function boardOrientation(board = activeBoard()) { return board?.orientation === "landscape" ? "landscape" : "portrait"; }
+function pageCellCount(board = activeBoard()) { return boardOrientation(board) === "landscape" ? 18 : 16; }
+function emptyCellsFor(board = activeBoard()) { return Array(pageCellCount(board)).fill(null); }
 function loadBoards() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (Array.isArray(saved) && saved.length) return saved.map(normalizeBoard);
   } catch {}
-  return [{ id: uid(), title: "Mi tablero", orientation: "portrait", template: null, cells: Array(16).fill(null) }];
+  return [{ id: uid(), title: "Mi tablero", orientation: "portrait", templates: defaultTemplates(), template: null, cells: Array(16).fill(null) }];
 }
 function normalizeBoard(board) {
-  const cells = Array.isArray(board.cells) ? board.cells.slice(0, 16) : [];
-  while (cells.length < 16) cells.push(null);
   const orientation = board.orientation === "landscape" ? "landscape" : "portrait";
-  const template = board.template?.imageData ? {
+  const legacyTemplate = board.template?.imageData ? {
     name: board.template.name || "Plantilla PNG",
     imageData: board.template.imageData,
     fit: board.template.fit || "cover"
   } : null;
-  return { ...board, orientation, template, cells: removeBoardDuplicates(cells) };
+  const templates = {
+    ...defaultTemplates(),
+    ...(board.templates && typeof board.templates === "object" ? board.templates : {})
+  };
+  if (legacyTemplate && !templates[orientation]) templates[orientation] = legacyTemplate;
+  const template = templates[orientation] || null;
+  const cells = Array.isArray(board.cells) ? board.cells.slice() : [];
+  while (cells.length < pageCellCount({ orientation })) cells.push(null);
+  return { ...board, orientation, templates, template, cells: removeBoardDuplicates(cells) };
 }
 function save() {
   safeSetLocalStorage(STORAGE_KEY, JSON.stringify(boards));
@@ -185,7 +196,7 @@ function isStorageQuotaError(error) {
 }
 
 function createBoard() {
-  const board = { id: uid(), title: `Tablero ${boards.length + 1}`, orientation: "portrait", template: null, cells: Array(16).fill(null) };
+  const board = { id: uid(), title: `Tablero ${boards.length + 1}`, orientation: "portrait", templates: defaultTemplates(), template: null, cells: Array(16).fill(null) };
   boards.push(board); activeId = board.id; markDirty(); save(); render();
 }
 function addBlankPage(sourceBoardId = activeId) {
@@ -201,9 +212,10 @@ function addBlankPage(sourceBoardId = activeId) {
     semanticGenerated: Boolean(root.semanticGenerated),
     manualBlankPage: true,
     orientation: root.orientation || "portrait",
+    templates: { ...defaultTemplates(), ...(root.templates || {}) },
     template: root.template || null,
     semanticPage: semanticSiblingBoards(root).length + 1,
-    cells: Array(16).fill(null)
+    cells: emptyCellsFor(root)
   };
   boards.push(newPage);
   activeId = newPage.id;
@@ -213,7 +225,7 @@ function addBlankPage(sourceBoardId = activeId) {
 }
 function deleteBoard() {
   if (boards.length === 1) {
-    boards[0] = { id: uid(), title: "Mi tablero", orientation: "portrait", template: null, cells: Array(16).fill(null) };
+    boards[0] = { id: uid(), title: "Mi tablero", orientation: "portrait", templates: defaultTemplates(), template: null, cells: Array(16).fill(null) };
   } else boards = boards.filter(board => board.id !== activeId);
   activeId = boards[0].id; markDirty(); save(); render();
 }
@@ -232,34 +244,90 @@ function updateProperties() {
 }
 
 function updateBoardOrientation() {
-  const board = activeBoard();
-  const root = rootBoardFor(board);
+  const root = rootBoardFor(activeBoard());
   const nextOrientation = orientationSelect.value === "landscape" ? "landscape" : "portrait";
-  semanticSiblingBoards(root).forEach(item => { item.orientation = nextOrientation; });
-  markDirty(); save(); renderPage();
+  void applyOrientationToRoot(root, nextOrientation).catch(error => {
+    alert(error.message || "No se pudo cambiar la disposición del tablero.");
+    orientationSelect.value = boardOrientation(root);
+  });
+}
+
+async function applyOrientationToRoot(root, nextOrientation) {
+  const templates = { ...defaultTemplates(), ...(root.templates || {}) };
+  if (nextOrientation === "landscape" && !templates.landscape) {
+    templates.landscape = await loadDefaultHorizontalTemplate();
+  }
+  const template = templates[nextOrientation] || null;
+  redistributeRootPages(root, nextOrientation, templates, template);
+  markDirty(); save(); render();
+}
+
+async function loadDefaultHorizontalTemplate() {
+  const response = await fetch(HORIZONTAL_TEMPLATE_URL);
+  if (!response.ok) throw new Error("No se pudo cargar la plantilla horizontal.");
+  const blob = await response.blob();
+  return { name: "Plantilla horizontal IMSS", imageData: await blobToDataUrl(blob), fit: "cover" };
+}
+
+function redistributeRootPages(root, orientation, templates, template) {
+  const rootId = root.semanticRootId || root.id;
+  const siblings = semanticSiblingBoards(root);
+  const cells = siblings.flatMap(item => item.cells || []).filter(Boolean);
+  const capacity = pageCellCount({ orientation });
+  const pagesNeeded = Math.max(1, Math.ceil(cells.length / capacity));
+  while (siblings.length < pagesNeeded) {
+    const page = {
+      id: uid(),
+      title: root.title,
+      semanticParentId: root.id,
+      semanticRootId: rootId,
+      semanticGenerated: Boolean(root.semanticGenerated),
+      manualBlankPage: true,
+      orientation,
+      templates,
+      template,
+      semanticPage: siblings.length + 1,
+      cells: Array(capacity).fill(null)
+    };
+    siblings.push(page);
+    boards.push(page);
+  }
+  const keepIds = new Set(siblings.slice(0, pagesNeeded).map(item => item.id));
+  if (siblings.length > pagesNeeded) boards = boards.filter(item => !siblings.some(page => page.id === item.id) || keepIds.has(item.id));
+  siblings.slice(0, pagesNeeded).forEach((item, pageIndex) => {
+    item.title = root.title;
+    item.semanticRootId = rootId;
+    item.orientation = orientation;
+    item.templates = { ...defaultTemplates(), ...templates };
+    item.template = template;
+    item.semanticPage = pageIndex + 1;
+    const chunk = cells.slice(pageIndex * capacity, (pageIndex + 1) * capacity);
+    item.cells = [...chunk, ...Array(Math.max(0, capacity - chunk.length)).fill(null)];
+  });
+  if (!boards.some(item => item.id === activeId)) activeId = root.id;
 }
 
 function clearBoardTemplate() {
   const root = rootBoardFor(activeBoard());
-  semanticSiblingBoards(root).forEach(item => { item.template = null; });
+  const orientation = boardOrientation(root);
+  const templates = { ...defaultTemplates(), ...(root.templates || {}) };
+  templates[orientation] = null;
+  semanticSiblingBoards(root).forEach(item => {
+    item.templates = { ...templates };
+    item.template = null;
+  });
   templateFileInput.value = "";
   markDirty(); save(); renderPage();
 }
 
 async function applyDefaultHorizontalTemplate() {
   try {
-    const response = await fetch(HORIZONTAL_TEMPLATE_URL);
-    if (!response.ok) throw new Error("No se pudo cargar la plantilla horizontal.");
-    const blob = await response.blob();
-    const imageData = await blobToDataUrl(blob);
     const root = rootBoardFor(activeBoard());
-    const template = { name: "Plantilla horizontal IMSS", imageData, fit: "cover" };
-    semanticSiblingBoards(root).forEach(item => {
-      item.orientation = "landscape";
-      item.template = template;
-    });
+    const templates = { ...defaultTemplates(), ...(root.templates || {}) };
+    templates.landscape = await loadDefaultHorizontalTemplate();
+    redistributeRootPages(root, "landscape", templates, templates.landscape);
     orientationSelect.value = "landscape";
-    markDirty(); save(); renderPage();
+    markDirty(); save(); render();
   } catch (error) {
     alert(error.message || "No se pudo aplicar la plantilla horizontal.");
   }
@@ -276,9 +344,12 @@ function selectTemplatePng(event) {
   const reader = new FileReader();
   reader.addEventListener("load", () => {
     const root = rootBoardFor(activeBoard());
+    const orientation = boardOrientation(root);
+    const templates = { ...defaultTemplates(), ...(root.templates || {}) };
     const template = { name: file.name, imageData: String(reader.result), fit: "cover" };
-    semanticSiblingBoards(root).forEach(item => { item.template = template; });
-    markDirty(); save(); renderPage();
+    templates[orientation] = template;
+    redistributeRootPages(root, orientation, templates, template);
+    markDirty(); save(); render();
   });
   reader.readAsDataURL(file);
 }
@@ -338,8 +409,10 @@ async function addSemanticGroupToEditor(event) {
   base.title = sharedTitle;
   base.semanticRootId = base.semanticRootId || base.id;
   base.semanticGenerated = true;
-  for (let index = 0; index < unique.length; index += 16) {
-    const cells = unique.slice(index, index + 16);
+  const capacity = pageCellCount(base);
+  const templates = { ...defaultTemplates(), ...(base.templates || {}) };
+  for (let index = 0; index < unique.length; index += capacity) {
+    const cells = unique.slice(index, index + capacity);
     const target = index === 0 ? base : {
       id: uid(),
       title: sharedTitle,
@@ -347,11 +420,13 @@ async function addSemanticGroupToEditor(event) {
       semanticRootId: base.semanticRootId,
       semanticGenerated: true,
       orientation: base.orientation || "portrait",
+      templates,
       template: base.template || null,
-      semanticPage: Math.floor(index / 16) + 1,
-      cells: Array(16).fill(null)
+      semanticPage: Math.floor(index / capacity) + 1,
+      cells: Array(capacity).fill(null)
     };
-    target.cells = [...cells, ...Array(Math.max(0, 16 - cells.length)).fill(null)];
+    target.templates = { ...templates };
+    target.cells = [...cells, ...Array(Math.max(0, capacity - cells.length)).fill(null)];
     if (index > 0) {
       rememberNewDraft(target.id);
       boards.push(target);
@@ -426,7 +501,7 @@ function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
   });
   const grid = document.createElement("div");
   grid.className = "editor-grid";
-  board.cells.forEach((cell, index) => grid.append(cell ? makeCell(cell, index, board.id) : makeEmptySlot(index, board.id)));
+  boardPageCells(board).forEach((cell, index) => grid.append(cell ? makeCell(cell, index, board.id) : makeEmptySlot(index, board.id)));
   const footer = document.createElement("footer");
   footer.className = "editor-license"; footer.textContent = INSTITUTIONAL_FOOTER;
   wrapper.append(controls, header, grid, footer);
@@ -443,7 +518,7 @@ function validateBoardPage(boardId) {
 
 function deleteBoardPage(boardId) {
   if (boards.length === 1) {
-    boards[0].cells = Array(16).fill(null);
+    boards[0].cells = emptyCellsFor(boards[0]);
     markDirty(); save();
     render();
     return;
@@ -837,7 +912,7 @@ function discardEditorSession() {
   }
   boards = structuredClone(editorSessionSnapshot.boards);
   activeId = editorSessionSnapshot.activeId;
-  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", orientation: "portrait", template: null, cells: Array(16).fill(null) }];
+  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", orientation: "portrait", templates: defaultTemplates(), template: null, cells: Array(16).fill(null) }];
   semanticDraftDirty = false;
   editorDirty = false;
   semanticDraftSnapshots.clear();
@@ -872,7 +947,7 @@ function discardSemanticDraft() {
       boards[index] = snapshot;
     }
   }
-  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", orientation: "portrait", template: null, cells: Array(16).fill(null) }];
+  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", orientation: "portrait", templates: defaultTemplates(), template: null, cells: Array(16).fill(null) }];
   activeId = boards[0].id;
   semanticDraftDirty = false;
   semanticDraftSnapshots.clear();
@@ -1004,8 +1079,16 @@ async function exportInBrowser(format, board) {
 
 function makeWordCompatibleHtml(board) {
   const cells = printableCells(board).map(cell => cell ? `<td><div class="picto-box"><img src="${escapeHtml(cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id))}" width="132" height="118" style="width:1.38in;height:1.23in;object-fit:contain;"><p>${escapeHtml(cell.label)}</p></div></td>` : "<td></td>");
-  const rows = [0, 4, 8, 12].map(start => `<tr>${cells.slice(start, start + 4).join("")}</tr>`).join("");
-  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:letter portrait;margin:.22in .34in .25in}body{font-family:Arial,sans-serif;color:#082f61;margin:0}.heading{display:grid;grid-template-columns:4.64in 1fr;gap:.18in;align-items:end;border-bottom:3px solid #0757a5;margin:0 0 6pt;padding-bottom:4pt}.brand{width:4.64in;height:.72in;object-fit:contain;object-position:left center}.kicker{margin:0 0 2pt;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-block{text-align:left}h1{text-transform:uppercase;margin:0;font-size:20pt;line-height:1;color:#004b93}table{width:7.82in;table-layout:fixed;border-collapse:separate;border-spacing:5pt;margin:0 auto}tr{height:1.56in}td{width:1.84in;height:1.56in;border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle;padding:5pt;overflow:hidden}.picto-box{width:1.66in;height:1.42in;margin:0 auto;text-align:center;overflow:hidden}td img{display:block;width:1.38in;height:1.23in;margin:0 auto;border:0;object-fit:contain}td p{height:.24in;margin:1pt 0 0;color:#111;font-weight:bold;font-size:12pt;line-height:1.05;text-align:center;overflow:hidden}footer{font-size:4pt;line-height:1.1;text-align:center;color:#555;margin-top:4pt}</style></head><body><div class="heading"><img class="brand" src="${BOARD_HEADER_IMAGE}" width="445" height="69"><div class="title-block"><p class="kicker">Tablero de comunicaci&oacute;n por pictogramas</p><h1>${escapeHtml(board.title)}</h1></div></div><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
+  const columns = boardOrientation(board) === "landscape" ? 6 : 4;
+  const rowCount = boardOrientation(board) === "landscape" ? 3 : 4;
+  const rows = Array.from({ length: rowCount }, (_, row) => {
+    const start = row * columns;
+    return `<tr>${cells.slice(start, start + columns).join("")}</tr>`;
+  }).join("");
+  const pageSize = boardOrientation(board) === "landscape" ? "letter landscape" : "letter portrait";
+  const tableWidth = boardOrientation(board) === "landscape" ? "10.08in" : "7.82in";
+  const cellWidth = boardOrientation(board) === "landscape" ? "1.52in" : "1.84in";
+  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:${pageSize};margin:.22in .34in .25in}body{font-family:Arial,sans-serif;color:#082f61;margin:0}.heading{display:grid;grid-template-columns:4.64in 1fr;gap:.18in;align-items:end;border-bottom:3px solid #0757a5;margin:0 0 6pt;padding-bottom:4pt}.brand{width:4.64in;height:.72in;object-fit:contain;object-position:left center}.kicker{margin:0 0 2pt;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-block{text-align:left}h1{text-transform:uppercase;margin:0;font-size:20pt;line-height:1;color:#004b93}table{width:${tableWidth};table-layout:fixed;border-collapse:separate;border-spacing:5pt;margin:0 auto}tr{height:1.56in}td{width:${cellWidth};height:1.56in;border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle;padding:5pt;overflow:hidden}.picto-box{width:1.42in;height:1.42in;margin:0 auto;text-align:center;overflow:hidden}td img{display:block;width:1.22in;height:1.16in;margin:0 auto;border:0;object-fit:contain}td p{height:.24in;margin:1pt 0 0;color:#111;font-weight:bold;font-size:12pt;line-height:1.05;text-align:center;overflow:hidden}footer{font-size:4pt;line-height:1.1;text-align:center;color:#555;margin-top:4pt}</style></head><body><div class="heading"><img class="brand" src="${BOARD_HEADER_IMAGE}" width="445" height="69"><div class="title-block"><p class="kicker">Tablero de comunicaci&oacute;n por pictogramas</p><h1>${escapeHtml(board.title)}</h1></div></div><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
 }
 
 async function makeBoardSvgImage(board) {
@@ -1039,7 +1122,14 @@ async function makeBoardSvgImage(board) {
 }
 
 function printableCells(board) {
-  return Array.from({ length: 16 }, (_, index) => board.cells?.[index] || null);
+  return boardPageCells(board);
+}
+
+function boardPageCells(board) {
+  const count = pageCellCount(board);
+  const cells = Array.isArray(board.cells) ? board.cells.slice(0, count) : [];
+  while (cells.length < count) cells.push(null);
+  return cells;
 }
 
 function escapeSvg(value = "") {
@@ -1047,17 +1137,23 @@ function escapeSvg(value = "") {
 }
 async function exportBoardHtml() {
   const board = activeBoard();
-  const cells = board.cells.map(cell => cell ? `
+  const orientation = boardOrientation(board);
+  const cells = printableCells(board).map(cell => cell ? `
     <article class="cell">
       <img src="${cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id)}" alt="${escapeHtml(cell.label)}">
       <strong>${escapeHtml(cell.label)}</strong>
     </article>` : '<div class="empty"></div>').join("");
+  const landscape = orientation === "landscape";
+  const pageSize = landscape ? "letter landscape" : "letter portrait";
+  const pageBox = landscape ? "width:11in;height:8.5in;" : "width:8.5in;height:11in;";
+  const gridShape = landscape ? "repeat(6,1fr)" : "repeat(4,1fr)";
+  const rowShape = landscape ? "repeat(3,1fr)" : "repeat(4,1fr)";
   const html = `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>${escapeHtml(board.title)}</title><style>
-@page{size:letter portrait;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif}
-.page{position:relative;width:8.5in;height:11in;padding:4.2mm 12mm 12mm;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
-.heading{min-height:150px;padding-bottom:5px;border-bottom:3px solid #004b93;text-align:center}.header-top{width:calc(100% + 20mm);margin:-2mm -10mm 3px;display:block}.brand-image{display:block;width:58.4%;height:1.16in;object-fit:contain;object-position:left top}.title-block{padding-top:3px;text-align:center}.kicker{margin:0 0 1px;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-separator{width:80%;height:2px;margin:3px auto 4px;background:#004b93}h1{color:#004b93;margin:0;font-size:23pt;line-height:1;text-transform:uppercase}.grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:7px;min-height:0}
+@page{size:${pageSize};margin:0}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif}
+.page{position:relative;${pageBox}padding:4.2mm 12mm 12mm;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+.heading{min-height:150px;padding-bottom:5px;border-bottom:3px solid #004b93;text-align:center}.header-top{width:calc(100% + 20mm);margin:-2mm -10mm 3px;display:block}.brand-image{display:block;width:58.4%;height:1.16in;object-fit:contain;object-position:left top}.title-block{padding-top:3px;text-align:center}.kicker{margin:0 0 1px;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-separator{width:80%;height:2px;margin:3px auto 4px;background:#004b93}h1{color:#004b93;margin:0;font-size:23pt;line-height:1;text-transform:uppercase}.grid{display:grid;grid-template-columns:${gridShape};grid-template-rows:${rowShape};gap:7px;min-height:0}
 .cell,.empty{min-height:0;border:2.5px solid #0757a5;border-radius:10px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center}
 .empty{border-style:dashed;border-color:#aaa}.cell img{width:100%;height:calc(100% - 32px);object-fit:contain}.cell strong{font-size:15pt;line-height:1.05}
 footer{position:absolute;left:12mm;right:12mm;bottom:5mm;padding-top:4px;border-top:1px solid #777;font-size:4.5pt;line-height:1.15;text-align:center;background:#fff}
