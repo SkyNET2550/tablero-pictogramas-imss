@@ -158,6 +158,8 @@ dialog::backdrop { background: #001b31cc; }
 .sidebar-actions { display: grid; gap: 5px; padding: 9px; border: 1px solid #b2c2d1; border-radius: 8px; background: #edf3f8; }
 .sidebar-actions h3 { margin: 0 0 3px; color: #526879; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
 .sidebar-actions button { min-height: 31px; padding: 4px 7px; font-size: 13px; line-height: 1.1; }
+.sidebar-template-actions label { color: #526879; font-size: 11px; font-weight: 700; }
+.sidebar-template-actions select { min-height: 31px; padding: 4px 7px; border-color: #b2c2d1; font-size: 13px; }
 .danger { color: #8a1c1c; }
 .editor-workspace { padding: 14px; overflow: auto; }
 .editor-properties { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 12px; }
@@ -168,6 +170,16 @@ dialog::backdrop { background: #001b31cc; }
 .editor-page { position: relative; width: 7.3in; min-height: 9.45in; margin: auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto 1fr; }
 .editor-page-sequence { width: min(7.3in, 100%); min-height: auto; padding: 0; background: transparent; box-shadow: none; display: flex; flex-direction: column; gap: 18px; }
 .editor-page-sheet { position: relative; width: 7.3in; min-height: 9.45in; max-width: 100%; margin: 0 auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto auto 1fr; }
+.editor-page-sheet.landscape { width: 10.1in; min-height: 7.6in; padding: 5mm; }
+.editor-page-sheet.has-template { background-color: #fff; background-image: var(--board-template-image); background-size: 100% 100%; background-position: center; background-repeat: no-repeat; }
+.editor-page-sheet.has-template .editor-board-brand-image { visibility: hidden; }
+.editor-page-sheet.has-template .editor-board-header { border-bottom: 0; }
+.editor-page-sheet.landscape .editor-board-header { min-height: 1.34in; }
+.editor-page-sheet.landscape .editor-board-header .board-header-top { grid-template-columns: 40% minmax(0, 1fr); }
+.editor-page-sheet.landscape .editor-board-brand-image { height: .95in; }
+.editor-page-sheet.landscape .editor-grid { grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(3, 1fr); }
+.editor-page-sheet.landscape .editor-cell, .editor-page-sheet.landscape .empty-slot { min-height: 115px; }
+.editor-page-sheet.landscape .editor-cell img { height: 98px; }
 .editor-page-controls { display: flex; justify-content: flex-end; align-items: center; gap: 7px; margin-bottom: 7px; color: #2d526c; font-size: 12px; }
 .editor-page-controls span { margin-right: auto; font-weight: 700; }
 .editor-page-controls button { min-height: 30px; padding: 4px 8px; font-size: 12px; }
@@ -244,6 +256,7 @@ dialog::backdrop { background: #001b31cc; }
   body.print-editor .editor-page { width: 8.5in; height: 11in; min-height: 11in; margin: 0; padding: 4.2mm 12mm 12mm; overflow: hidden; box-shadow: none; }
   body.print-editor .editor-page-sequence { width: 8.5in; height: auto; min-height: auto; padding: 0; overflow: visible; display: block; }
   body.print-editor .editor-page-sheet { width: 8.5in; height: 11in; min-height: 11in; margin: 0; padding: 4.2mm 12mm 12mm; overflow: hidden; box-shadow: none; break-after: page; page-break-after: always; }
+  body.print-editor .editor-page-sheet.landscape { width: 11in; height: 8.5in; min-height: 8.5in; padding: 5mm; }
   .cell-actions { display: none !important; }
   body.print-predefined > :not(#predefined-view), body.print-predefined #board-hierarchy > header, body.print-predefined .global-board-types, body.print-predefined .predefined-board-groups { display: none !important; }
   body.print-predefined #predefined-view, body.print-predefined #board-hierarchy, body.print-predefined .predefined-detail, body.print-predefined #predefined-detail-content { display: block !important; margin: 0; padding: 0; max-width: none; background: #fff; box-shadow: none; }

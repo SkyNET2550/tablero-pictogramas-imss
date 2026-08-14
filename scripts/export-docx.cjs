@@ -22,16 +22,19 @@ const [input, output, root] = process.argv.slice(2);
 const payload = JSON.parse(fs.readFileSync(input, "utf8").replace(/^\uFEFF/, ""));
 const board = payload.board;
 const imagePath = path.join(root, payload.headerImage.replace(/^\.\//, ""));
+const landscape = board.orientation === "landscape";
 
-const PAGE_WIDTH = 12240;   // Carta: 8.5 in
-const PAGE_HEIGHT = 15840;  // Carta: 11 in
+const PAGE_WIDTH = landscape ? 15840 : 12240;   // Carta horizontal/vertical
+const PAGE_HEIGHT = landscape ? 12240 : 15840;
 const MARGIN_TOP = 317;     // 0.22 in, igual que impresión/PDF
 const MARGIN_RIGHT = 490;   // 0.34 in
 const MARGIN_BOTTOM = 360;  // 0.25 in
 const MARGIN_LEFT = 490;    // 0.34 in
 const TABLE_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
-const COLUMN_WIDTH = Math.floor(TABLE_WIDTH / 4);
-const ROW_HEIGHT = 2250;
+const COLUMN_COUNT = landscape ? 6 : 4;
+const ROW_COUNT = landscape ? 3 : 4;
+const COLUMN_WIDTH = Math.floor(TABLE_WIDTH / COLUMN_COUNT);
+const ROW_HEIGHT = landscape ? 1950 : 2250;
 const BLUE = "0757A5";
 
 const children = [];
@@ -72,13 +75,13 @@ children.push(new Paragraph({
 }));
 
 const cells = [...(board.cells || [])];
-while (cells.length < 16) cells.push(null);
+while (cells.length < COLUMN_COUNT * ROW_COUNT) cells.push(null);
 
 const rows = [];
-for (let r = 0; r < 4; r += 1) {
+for (let r = 0; r < ROW_COUNT; r += 1) {
   const row = [];
-  for (let c = 0; c < 4; c += 1) {
-    row.push(makeCell(cells[r * 4 + c]));
+  for (let c = 0; c < COLUMN_COUNT; c += 1) {
+    row.push(makeCell(cells[r * COLUMN_COUNT + c]));
   }
   rows.push(new TableRow({
     children: row,
@@ -89,7 +92,7 @@ for (let r = 0; r < 4; r += 1) {
 children.push(new Table({
   rows,
   width: { size: TABLE_WIDTH, type: WidthType.DXA },
-  columnWidths: [COLUMN_WIDTH, COLUMN_WIDTH, COLUMN_WIDTH, COLUMN_WIDTH]
+  columnWidths: Array(COLUMN_COUNT).fill(COLUMN_WIDTH)
 }));
 
 children.push(new Paragraph({
@@ -102,7 +105,7 @@ const doc = new Document({
   sections: [{
     properties: {
       page: {
-        size: { width: PAGE_WIDTH, height: PAGE_HEIGHT, orientation: PageOrientation.PORTRAIT },
+        size: { width: PAGE_WIDTH, height: PAGE_HEIGHT, orientation: landscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT },
         margin: { top: MARGIN_TOP, right: MARGIN_RIGHT, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT }
       }
     },
