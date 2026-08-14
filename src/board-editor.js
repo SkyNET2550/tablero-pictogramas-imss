@@ -72,6 +72,7 @@ export function initBoardEditor() {
   document.querySelector("#template-file-input").addEventListener("change", attachBoardTemplate);
   orientationInputs.forEach(input => input.addEventListener("change", updateBoardOrientation));
   Object.values(boardStyleControls).filter(Boolean).forEach(control => control.addEventListener("input", updateBoardStyle));
+  document.querySelector("#apply-board-design-button")?.addEventListener("click", updateBoardStyle);
   document.querySelector("#reset-board-design-button")?.addEventListener("click", resetBoardStyle);
   document.querySelector("#picker-search").addEventListener("submit", searchPicker);
   document.querySelector("#png-file-input").addEventListener("change", selectPngFile);

@@ -32,7 +32,7 @@ test("el diseño de títulos y encabezados se configura por tablero y llega a ex
   const png = await readFile("scripts/export-png.cjs", "utf8");
   const docx = await readFile("scripts/export-docx.cjs", "utf8");
 
-  for (const id of ["board-heading-color", "board-title-color", "board-heading-font", "board-title-font", "board-heading-size", "board-title-size", "reset-board-design-button"]) {
+  for (const id of ["board-heading-color", "board-title-color", "board-heading-font", "board-title-font", "board-heading-size", "board-title-size", "apply-board-design-button", "reset-board-design-button"]) {
     assert.match(html, new RegExp(id));
   }
   assert.match(css, /--board-heading-color/);
