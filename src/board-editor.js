@@ -12,6 +12,7 @@ const STORAGE_KEY = "arasaac-custom-boards-v1";
 const AUTOSAVE_KEY = "arasaac-custom-boards-autosave-v1";
 const CELLS_PER_PAGE = APP_CONFIG.pictogramsPerPage;
 const COLUMNS_PER_PAGE = 4;
+const LANDSCAPE_COLUMNS_PER_PAGE = 5;
 const editor = document.querySelector("#board-editor");
 const picker = document.querySelector("#pictogram-picker");
 const page = document.querySelector("#editor-page");
@@ -70,7 +71,7 @@ export function initBoardEditor() {
   document.querySelector("#editor-semantic-form").addEventListener("submit", addSemanticGroupToEditor);
   titleInput.addEventListener("input", updateProperties);
   setInterval(autosaveCurrentEditor, 60000);
-  window.addEventListener("afterprint", () => document.body.classList.remove("print-editor"));
+  window.addEventListener("afterprint", clearPrintMode);
   void restoreIndexedBoards();
 }
 
@@ -323,9 +324,12 @@ function renderList() {
 }
 function renderPage() {
   const board = activeBoard();
+  const orientation = boardOrientation(rootBoardFor(board));
   page.replaceChildren();
   const groupBoards = semanticSiblingBoards(board);
   page.classList.toggle("editor-page-sequence", groupBoards.length > 1);
+  page.dataset.orientation = orientation;
+  page.classList.toggle("editor-page--horizontal", orientation === "horizontal");
   if (groupBoards.length > 1) {
     groupBoards.forEach((item, pageIndex) => page.append(makeBoardPage(item, pageIndex, groupBoards.length)));
     return;
@@ -348,7 +352,7 @@ function updateBoardOrientation(event) {
   const board = activeBoard();
   if (!board || !event.target.checked) return;
   board.orientation = event.target.value === "horizontal" ? "horizontal" : "vertical";
-  markDirty(); save(); renderConfiguration(board);
+  markDirty(); save(); renderPage(); renderConfiguration(board);
 }
 
 function attachBoardTemplate(event) {
@@ -389,9 +393,11 @@ function rootBoardFor(board) {
 }
 
 function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
+  const orientation = boardOrientation(rootBoardFor(board));
   const wrapper = document.createElement("section");
-  wrapper.className = "editor-page-sheet";
+  wrapper.className = `editor-page-sheet editor-page-sheet--${orientation}`;
   wrapper.dataset.boardId = board.id;
+  wrapper.dataset.orientation = orientation;
   const header = document.createElement("header");
   header.className = "editor-board-header";
   header.innerHTML = institutionalHeaderHtml(escapeHtml(board.title), "editor-board-brand-image");
@@ -407,7 +413,7 @@ function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
     if (action === "add") addBlankPage(board.id);
   });
   const grid = document.createElement("div");
-  grid.className = "editor-grid";
+  grid.className = `editor-grid editor-grid--${orientation}`;
   board.cells.forEach((cell, index) => grid.append(cell ? makeCell(cell, index, board.id) : makeEmptySlot(index, board.id)));
   const footer = document.createElement("footer");
   footer.className = "editor-license"; footer.textContent = INSTITUTIONAL_FOOTER;
@@ -865,9 +871,35 @@ function discardSemanticDraft() {
 function printBoard() {
   const previousTitle = document.title;
   document.title = activeBoard().title;
+  const orientation = boardOrientation(rootBoardFor(activeBoard()));
   document.body.classList.add("print-editor");
+  document.body.classList.toggle("print-landscape", orientation === "horizontal");
+  setPrintPageSize(orientation);
   window.addEventListener("afterprint", () => { document.title = previousTitle; }, { once: true });
   requestAnimationFrame(() => window.print());
+}
+
+function boardOrientation(board) {
+  return board?.orientation === "horizontal" ? "horizontal" : "vertical";
+}
+
+function boardColumnCount(board) {
+  return boardOrientation(board) === "horizontal" ? LANDSCAPE_COLUMNS_PER_PAGE : COLUMNS_PER_PAGE;
+}
+
+function setPrintPageSize(orientation) {
+  let style = document.querySelector("#editor-print-page-style");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "editor-print-page-style";
+    document.head.append(style);
+  }
+  style.textContent = `@page { size: A4 ${orientation === "horizontal" ? "landscape" : "portrait"}; margin: 0; }`;
+}
+
+function clearPrintMode() {
+  document.body.classList.remove("print-editor", "print-landscape");
+  document.querySelector("#editor-print-page-style")?.remove();
 }
 async function openEditableBoardDialog() {
   if (!usesNativeDialogs()) {
@@ -985,10 +1017,20 @@ async function exportInBrowser(format, board) {
 }
 
 function makeWordCompatibleHtml(board) {
-  const cells = printableCells(board).map(cell => cell ? `<td><div class="picto-box"><img src="${escapeHtml(cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id))}" width="112" height="94" style="width:1.16in;height:.98in;object-fit:contain;"><p>${escapeHtml(cell.label)}</p></div></td>` : "<td></td>");
-  const rows = Array.from({ length: Math.ceil(CELLS_PER_PAGE / COLUMNS_PER_PAGE) }, (_, row) => row * COLUMNS_PER_PAGE)
-    .map(start => `<tr>${cells.slice(start, start + COLUMNS_PER_PAGE).join("")}</tr>`).join("");
-  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:letter portrait;margin:.22in .34in .25in}body{font-family:Arial,sans-serif;color:#082f61;margin:0}.heading{text-align:center;margin:0 0 6pt;padding-bottom:4pt}.brand{display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.kicker{margin:2pt 0 1pt;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.title-block{text-align:center}.title-separator{width:80%;height:2pt;margin:3pt auto 4pt;background:#0757a5}h1{text-transform:uppercase;margin:0;font-size:20pt;line-height:1;color:#004b93}table{width:7.82in;table-layout:fixed;border-collapse:separate;border-spacing:4pt;margin:0 auto}tr{height:1.23in}td{width:1.84in;height:1.23in;border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle;padding:4pt;overflow:hidden}.picto-box{width:1.66in;height:1.12in;margin:0 auto;text-align:center;overflow:hidden}td img{display:block;width:1.16in;height:.98in;margin:0 auto;border:0;object-fit:contain}td p{height:.22in;margin:1pt 0 0;color:#111;font-weight:bold;font-size:10pt;line-height:1.05;text-align:center;overflow:hidden}footer{font-size:4pt;line-height:1.1;text-align:center;color:#555;margin-top:4pt}</style></head><body><div class="heading"><img class="brand" src="${BOARD_HEADER_IMAGE}" width="445" height="69"><div class="title-block"><p class="kicker">Tablero de comunicaci&oacute;n por pictogramas</p><h1>${escapeHtml(board.title)}</h1></div><div class="title-separator"></div></div><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
+  const orientation = boardOrientation(board);
+  const columns = boardColumnCount(board);
+  const rowsPerPage = Math.ceil(CELLS_PER_PAGE / columns);
+  const pageSize = orientation === "horizontal" ? "A4 landscape" : "A4 portrait";
+  const tableWidth = orientation === "horizontal" ? "10.55in" : "7.35in";
+  const rowHeight = orientation === "horizontal" ? "1.08in" : "1.23in";
+  const imageHeight = orientation === "horizontal" ? ".82in" : ".98in";
+  const cells = printableCells(board).map(cell => cell ? `<td><div class="picto-box"><img src="${escapeHtml(cell.imageData || cell.imageUrl || getPictogramImageUrl(cell.id))}" alt=""><p>${escapeHtml(cell.label)}</p></div></td>` : "<td></td>");
+  const rows = Array.from({ length: rowsPerPage }, (_, row) => row * columns)
+    .map(start => `<tr>${cells.slice(start, start + columns).join("")}</tr>`).join("");
+  const headingCss = orientation === "horizontal"
+    ? ".heading{display:grid;grid-template-columns:48% 1fr;grid-template-areas:'brand title' 'rule rule';align-items:center;gap:8pt;margin:0 0 6pt}.brand{grid-area:brand;display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.title-block{grid-area:title;text-align:left}.title-separator{grid-area:rule;width:100%;height:2pt;margin:2pt 0 4pt;background:#0757a5}"
+    : ".heading{text-align:center;margin:0 0 6pt;padding-bottom:4pt}.brand{display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.title-block{text-align:center}.title-separator{width:80%;height:2pt;margin:3pt auto 4pt;background:#0757a5}";
+  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:${pageSize};margin:.22in .34in .25in}body{font-family:Arial,sans-serif;color:#082f61;margin:0}${headingCss}.kicker{margin:2pt 0 1pt;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}h1{text-transform:uppercase;margin:0;font-size:20pt;line-height:1;color:#004b93}table{width:${tableWidth};table-layout:fixed;border-collapse:separate;border-spacing:4pt;margin:0 auto}tr{height:${rowHeight}}td{height:${rowHeight};border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle;padding:4pt;overflow:hidden}.picto-box{width:100%;height:100%;margin:0 auto;text-align:center;overflow:hidden}td img{display:block;width:100%;height:${imageHeight};margin:0 auto;border:0;object-fit:contain}td p{height:.25in;margin:1pt 0 0;color:#111;font-weight:bold;font-size:10pt;line-height:1.05;text-align:center;overflow:hidden}footer{font-size:4pt;line-height:1.1;text-align:center;color:#555;margin-top:4pt}</style></head><body><div class="heading"><img class="brand" src="${BOARD_HEADER_IMAGE}" width="445" height="69"><div class="title-block"><p class="kicker">Tablero de comunicaci&oacute;n por pictogramas</p><h1>${escapeHtml(board.title)}</h1></div><div class="title-separator"></div></div><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
 }
 
 async function makeBoardSvgImage(board) {

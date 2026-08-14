@@ -1,4 +1,4 @@
-﻿@page { size: letter; margin: 0; }
+﻿@page { size: A4 portrait; margin: 0; }
 * { box-sizing: border-box; }
 body { margin: 0; background: #e8edf2; color: #111; font-family: Arial, Helvetica, sans-serif; }
 .app-footer { max-width: 1100px; margin: 20px auto 0; padding: 12px 18px 18px; color: #40586b; font-size: 11px; line-height: 1.35; text-align: center; }
@@ -168,9 +168,12 @@ dialog::backdrop { background: #001b31cc; }
 .editor-properties input, .picker-shell input { min-height: 38px; padding: 7px 9px; border: 1px solid #9badbd; border-radius: 5px; }
 .editor-properties > button { min-height: 38px; white-space: nowrap; }
 .semantic-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.editor-page { position: relative; width: 7.3in; min-height: 9.45in; margin: auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto 1fr; }
-.editor-page-sequence { width: min(7.3in, 100%); min-height: auto; padding: 0; background: transparent; box-shadow: none; display: flex; flex-direction: column; gap: 18px; }
-.editor-page-sheet { position: relative; width: 7.3in; min-height: 9.45in; max-width: 100%; margin: 0 auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto auto 1fr; }
+.editor-page { position: relative; width: 210mm; min-height: 297mm; max-width: 100%; margin: auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto 1fr; }
+.editor-page.editor-page--horizontal { width: 297mm; min-height: 210mm; }
+.editor-page-sequence { width: min(210mm, 100%); min-height: auto; padding: 0; background: transparent; box-shadow: none; display: flex; flex-direction: column; gap: 18px; }
+.editor-page-sequence[data-orientation="horizontal"] { width: min(297mm, 100%); }
+.editor-page-sheet { position: relative; width: 210mm; min-height: 297mm; max-width: 100%; margin: 0 auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto auto 1fr; }
+.editor-page-sheet--horizontal { width: 297mm; min-height: 210mm; }
 .editor-page-controls { display: flex; justify-content: flex-end; align-items: center; gap: 7px; margin-bottom: 7px; color: #2d526c; font-size: 12px; }
 .editor-page-controls span { margin-right: auto; font-weight: 700; }
 .editor-page-controls button { min-height: 30px; padding: 4px 8px; font-size: 12px; }
@@ -181,6 +184,25 @@ dialog::backdrop { background: #001b31cc; }
 .editor-board-header .board-institutional-text p { margin: 0; font-size: 7.6pt; line-height: 1.15; }
 .editor-board-header h1 { margin: 0; color: #073b73; }
 .editor-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); gap: 6px; min-height: 0; }
+.editor-page-sheet--horizontal .editor-board-header { min-height: 92px; display: grid; grid-template-columns: 48% minmax(0, 1fr); grid-template-areas: "brand title" "rule rule"; align-items: center; column-gap: 12px; text-align: left; }
+.editor-page-sheet--horizontal .editor-board-header .board-header-top { grid-area: brand; margin: 0; }
+.editor-page-sheet--horizontal .editor-board-brand-image { width: 100%; height: .72in; object-position: left center; }
+.editor-page-sheet--horizontal .editor-board-header .board-title-block { grid-area: title; justify-self: end; width: 100%; max-width: 420px; padding: 0; text-align: left; }
+.editor-page-sheet--horizontal .editor-board-header .board-kicker { font-size: 10.5pt; line-height: 1.05; }
+.editor-page-sheet--horizontal .editor-board-header h1 { font-size: 22pt; line-height: 1; }
+.editor-page-sheet--horizontal .editor-board-header .board-title-separator { grid-area: rule; width: 100%; margin: 4px 0 0; }
+.editor-grid--horizontal { grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(4, 1fr); }
+.editor-grid--horizontal .editor-cell img { height: 76px; }
+
+.editor-page--horizontal .editor-board-header { min-height: 92px; display: grid; grid-template-columns: 48% minmax(0, 1fr); grid-template-areas: "brand title" "rule rule"; align-items: center; column-gap: 12px; text-align: left; }
+.editor-page--horizontal .editor-board-header .board-header-top { grid-area: brand; margin: 0; }
+.editor-page--horizontal .editor-board-brand-image { width: 100%; height: .72in; object-position: left center; }
+.editor-page--horizontal .editor-board-header .board-title-block { grid-area: title; justify-self: end; width: 100%; max-width: 420px; padding: 0; text-align: left; }
+.editor-page--horizontal .editor-board-header .board-kicker { font-size: 10.5pt; line-height: 1.05; }
+.editor-page--horizontal .editor-board-header h1 { font-size: 22pt; line-height: 1; }
+.editor-page--horizontal .editor-board-header .board-title-separator { grid-area: rule; width: 100%; margin: 4px 0 0; }
+.editor-page--horizontal .editor-grid { grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(4, 1fr); }
+.editor-page--horizontal .editor-grid .editor-cell img { height: 76px; }
 .editor-cell { position: relative; min-height: 98px; border: 2px solid #0757a5; border-radius: 9px; padding: 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: #fff; cursor: grab; }
 .editor-cell.selected { outline: 5px solid #ffb000; }
 .editor-cell img { width: 100%; height: 92px; padding: 0; object-fit: contain; object-position: center; }
@@ -237,16 +259,19 @@ dialog::backdrop { background: #001b31cc; }
 .confirmation-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .confirmation-actions #confirm-pictogram-button { color: #fff; background: #087a88; border-color: #087a88; }
 @media print {
-  @page { size: letter portrait; margin: 0; }
+  @page { size: A4 portrait; margin: 0; }
   .no-print { display: none !important; }
   body { background: #fff; }
   .page { margin: 0; box-shadow: none; }
   body.print-editor > :not(#board-editor), body.print-editor .editor-header, body.print-editor .editor-sidebar, body.print-editor .editor-properties, body.print-editor .editor-hint { display: none !important; }
   body.print-editor #board-editor { display: block; position: static; width: auto; height: auto; margin: 0; overflow: visible; }
   body.print-editor .editor-shell, body.print-editor .editor-workspace { display: block; padding: 0; overflow: visible; background: #fff; }
-  body.print-editor .editor-page { width: 8.5in; height: 11in; min-height: 11in; margin: 0; padding: 4.2mm 12mm 12mm; overflow: hidden; box-shadow: none; }
-  body.print-editor .editor-page-sequence { width: 8.5in; height: auto; min-height: auto; padding: 0; overflow: visible; display: block; }
-  body.print-editor .editor-page-sheet { width: 8.5in; height: 11in; min-height: 11in; margin: 0; padding: 4.2mm 12mm 12mm; overflow: hidden; box-shadow: none; break-after: page; page-break-after: always; }
+  body.print-editor .editor-page { width: 210mm; height: 297mm; min-height: 297mm; margin: 0; padding: 4.2mm 12mm 12mm; overflow: hidden; box-shadow: none; }
+  body.print-editor.print-landscape .editor-page { width: 297mm; height: 210mm; min-height: 210mm; }
+  body.print-editor .editor-page-sequence { width: 210mm; height: auto; min-height: auto; padding: 0; overflow: visible; display: block; }
+  body.print-editor.print-landscape .editor-page-sequence { width: 297mm; }
+  body.print-editor .editor-page-sheet { width: 210mm; height: 297mm; min-height: 297mm; margin: 0; padding: 4.2mm 12mm 12mm; overflow: hidden; box-shadow: none; break-after: page; page-break-after: always; }
+  body.print-editor.print-landscape .editor-page-sheet { width: 297mm; height: 210mm; min-height: 210mm; }
   .cell-actions { display: none !important; }
   body.print-predefined > :not(#predefined-view), body.print-predefined #board-hierarchy > header, body.print-predefined .global-board-types, body.print-predefined .predefined-board-groups { display: none !important; }
   body.print-predefined #predefined-view, body.print-predefined #board-hierarchy, body.print-predefined .predefined-detail, body.print-predefined #predefined-detail-content { display: block !important; margin: 0; padding: 0; max-width: none; background: #fff; box-shadow: none; }
@@ -353,4 +378,6 @@ dialog::backdrop { background: #001b31cc; }
   :where(.cell, .editor-cell, button, input, textarea, select) { border: 2px solid CanvasText; }
   .api-status::after { forced-color-adjust: none; }
 }
+
+
 

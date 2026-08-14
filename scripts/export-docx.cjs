@@ -1,4 +1,4 @@
-const fs = require("fs");
+﻿const fs = require("fs");
 const path = require("path");
 
 const {
@@ -23,18 +23,19 @@ const payload = JSON.parse(fs.readFileSync(input, "utf8").replace(/^\uFEFF/, "")
 const board = payload.board;
 const imagePath = path.join(root, payload.headerImage.replace(/^\.\//, ""));
 
-const PAGE_WIDTH = 12240;   // Carta: 8.5 in
-const PAGE_HEIGHT = 15840;  // Carta: 11 in
-const MARGIN_TOP = 317;     // 0.22 in, igual que impresión/PDF
+const isLandscape = board.orientation === "horizontal";
+const PAGE_WIDTH = isLandscape ? 16838 : 11906;   // A4 landscape/portrait
+const PAGE_HEIGHT = isLandscape ? 11906 : 16838;  // A4 landscape/portrait
+const MARGIN_TOP = 317;     // 0.22 in, igual que impresiÃ³n/PDF
 const MARGIN_RIGHT = 490;   // 0.34 in
 const MARGIN_BOTTOM = 360;  // 0.25 in
 const MARGIN_LEFT = 490;    // 0.34 in
 const TABLE_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
-const COLUMN_WIDTH = Math.floor(TABLE_WIDTH / 4);
-const ROW_HEIGHT = 1740;
 const CELLS_PER_PAGE = 20;
-const ROWS_PER_PAGE = 5;
-const COLUMNS_PER_PAGE = 4;
+const COLUMNS_PER_PAGE = isLandscape ? 5 : 4;
+const ROWS_PER_PAGE = isLandscape ? 4 : 5;
+const COLUMN_WIDTH = Math.floor(TABLE_WIDTH / COLUMNS_PER_PAGE);
+const ROW_HEIGHT = isLandscape ? 1410 : 1740;
 const BLUE = "0757A5";
 
 const children = [];
@@ -43,7 +44,7 @@ if (fs.existsSync(imagePath)) {
   children.push(new Paragraph({
     children: [new ImageRun({
       data: fs.readFileSync(imagePath),
-      transformation: { width: 445, height: 69 },
+      transformation: { width: isLandscape ? 445 : 445, height: 69 },
       type: "jpg"
     })],
     alignment: AlignmentType.LEFT,
@@ -53,7 +54,7 @@ if (fs.existsSync(imagePath)) {
 
 children.push(new Paragraph({
   children: [new TextRun({
-    text: "TABLERO DE COMUNICACIÓN POR PICTOGRAMAS",
+    text: "TABLERO DE COMUNICACIÃ“N POR PICTOGRAMAS",
     bold: true,
     color: "004B93",
     size: 22
@@ -92,7 +93,7 @@ for (let r = 0; r < ROWS_PER_PAGE; r += 1) {
 children.push(new Table({
   rows,
   width: { size: TABLE_WIDTH, type: WidthType.DXA },
-  columnWidths: [COLUMN_WIDTH, COLUMN_WIDTH, COLUMN_WIDTH, COLUMN_WIDTH]
+  columnWidths: Array(COLUMNS_PER_PAGE).fill(COLUMN_WIDTH)
 }));
 
 children.push(new Paragraph({
@@ -105,7 +106,7 @@ const doc = new Document({
   sections: [{
     properties: {
       page: {
-        size: { width: PAGE_WIDTH, height: PAGE_HEIGHT, orientation: PageOrientation.PORTRAIT },
+        size: { width: PAGE_WIDTH, height: PAGE_HEIGHT, orientation: isLandscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT },
         margin: { top: MARGIN_TOP, right: MARGIN_RIGHT, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT }
       }
     },
@@ -123,7 +124,7 @@ function makeCell(cell) {
       content.push(new Paragraph({
         children: [new ImageRun({
           data,
-          transformation: { width: 112, height: 94 },
+          transformation: { width: isLandscape ? 118 : 112, height: isLandscape ? 78 : 94 },
           type: imageType(cell)
         })],
         alignment: AlignmentType.CENTER,
@@ -167,3 +168,8 @@ function imageType(cell) {
   if (cell.imageData?.startsWith("data:image/jpeg")) return "jpg";
   return "png";
 }
+
+
+
+
+
