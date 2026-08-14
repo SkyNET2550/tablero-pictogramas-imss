@@ -127,9 +127,9 @@ input { font: inherit; }
 .board-institutional-text p { margin: 0; font-size: 8.8pt; line-height: 1.15; }
 .board-institutional-text .main-area { font-weight: 700; }
 .board-title-block { min-width: 0; padding: 3px 0 0; text-align: center; }
-.board-kicker { margin: 0 0 1px; color: #004b93; font-size: 11pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.board-title-separator { width: 80%; height: 2px; margin: 3px auto 4px; background: #004b93; }
-.board-title-block h1 { margin: 0; color: #004b93; font-size: 23pt; line-height: 1; text-transform: uppercase; }
+.board-kicker { margin: 0 0 1px; color: var(--board-heading-color, #004b93); font-family: var(--board-heading-font, Arial, sans-serif); font-size: var(--board-heading-size, 11pt); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.board-title-separator { width: 80%; height: 2px; margin: 3px auto 4px; background: var(--board-heading-color, #004b93); }
+.board-title-block h1 { margin: 0; color: var(--board-title-color, #004b93); font-family: var(--board-title-font, Arial, sans-serif); font-size: var(--board-title-size, 23pt); line-height: 1; text-transform: uppercase; }
 .board-description { margin: 3px 0 0; font-size: 9.5pt; }
 .board-header h1 { margin: 0; color: #073b73; font-size: 23pt; }
 .board-header > .board-description { margin: 4px 0 0; font-size: 10.5pt; }
@@ -161,6 +161,9 @@ dialog::backdrop { background: #001b31cc; }
 .orientation-options { display: grid; gap: 4px; margin: 0; padding: 0; border: 0; }
 .orientation-options label { display: flex; align-items: center; gap: 6px; min-height: 24px; color: #003b73; font-size: 13px; font-weight: 700; }
 .orientation-options input { width: 14px; height: 14px; accent-color: #07848b; }
+.sidebar-design-actions label { display: grid; gap: 3px; color: #003b73; font-size: 12px; font-weight: 700; }
+.sidebar-design-actions input, .sidebar-design-actions select { width: 100%; min-height: 28px; padding: 3px 5px; border: 1px solid #9badbd; border-radius: 5px; background: #fff; color: #082f61; font-size: 12px; }
+.sidebar-design-actions input[type="color"] { height: 30px; padding: 2px; }
 .danger { color: #8a1c1c; }
 .editor-workspace { padding: 14px; overflow: auto; }
 .editor-properties { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 12px; }
@@ -182,14 +185,14 @@ dialog::backdrop { background: #001b31cc; }
 .editor-board-brand-image { display: block; width: 58.4%; height: 1.02in; object-fit: contain; object-position: left top; }
 .editor-board-header .board-institutional-text { height: 1.02in; padding: 0 4px 2px 0; justify-content: flex-end; }
 .editor-board-header .board-institutional-text p { margin: 0; font-size: 7.6pt; line-height: 1.15; }
-.editor-board-header h1 { margin: 0; color: #073b73; }
+.editor-board-header h1 { margin: 0; color: var(--board-title-color, #073b73); font-family: var(--board-title-font, Arial, sans-serif); }
 .editor-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); gap: 6px; min-height: 0; }
 .editor-page-sheet--horizontal .editor-board-header { min-height: 92px; display: grid; grid-template-columns: 48% minmax(0, 1fr); grid-template-areas: "brand title" "rule rule"; align-items: center; column-gap: 12px; text-align: left; }
 .editor-page-sheet--horizontal .editor-board-header .board-header-top { grid-area: brand; margin: 0; }
 .editor-page-sheet--horizontal .editor-board-brand-image { width: 100%; height: .72in; object-position: left center; }
 .editor-page-sheet--horizontal .editor-board-header .board-title-block { grid-area: title; justify-self: end; width: 100%; max-width: 420px; padding: 0; text-align: left; }
-.editor-page-sheet--horizontal .editor-board-header .board-kicker { font-size: 10.5pt; line-height: 1.05; }
-.editor-page-sheet--horizontal .editor-board-header h1 { font-size: 22pt; line-height: 1; }
+.editor-page-sheet--horizontal .editor-board-header .board-kicker { font-size: var(--board-heading-size, 10.5pt); line-height: 1.05; }
+.editor-page-sheet--horizontal .editor-board-header h1 { font-size: var(--board-title-size, 22pt); line-height: 1; }
 .editor-page-sheet--horizontal .editor-board-header .board-title-separator { grid-area: rule; width: 100%; margin: 4px 0 0; }
 .editor-grid--horizontal { grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(4, 1fr); }
 .editor-grid--horizontal .editor-cell img { height: 76px; }
@@ -198,8 +201,8 @@ dialog::backdrop { background: #001b31cc; }
 .editor-page--horizontal .editor-board-header .board-header-top { grid-area: brand; margin: 0; }
 .editor-page--horizontal .editor-board-brand-image { width: 100%; height: .72in; object-position: left center; }
 .editor-page--horizontal .editor-board-header .board-title-block { grid-area: title; justify-self: end; width: 100%; max-width: 420px; padding: 0; text-align: left; }
-.editor-page--horizontal .editor-board-header .board-kicker { font-size: 10.5pt; line-height: 1.05; }
-.editor-page--horizontal .editor-board-header h1 { font-size: 22pt; line-height: 1; }
+.editor-page--horizontal .editor-board-header .board-kicker { font-size: var(--board-heading-size, 10.5pt); line-height: 1.05; }
+.editor-page--horizontal .editor-board-header h1 { font-size: var(--board-title-size, 22pt); line-height: 1; }
 .editor-page--horizontal .editor-board-header .board-title-separator { grid-area: rule; width: 100%; margin: 4px 0 0; }
 .editor-page--horizontal .editor-grid { grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(4, 1fr); }
 .editor-page--horizontal .editor-grid .editor-cell img { height: 76px; }

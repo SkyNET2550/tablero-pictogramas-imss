@@ -22,6 +22,7 @@ const [input, output, root] = process.argv.slice(2);
 const payload = JSON.parse(fs.readFileSync(input, "utf8").replace(/^\uFEFF/, ""));
 const board = payload.board;
 const imagePath = path.join(root, payload.headerImage.replace(/^\.\//, ""));
+const style = normalizeStyle(board.style);
 
 const isLandscape = board.orientation === "horizontal";
 const PAGE_WIDTH = isLandscape ? 16838 : 11906;   // A4 landscape/portrait
@@ -37,6 +38,8 @@ const ROWS_PER_PAGE = isLandscape ? 4 : 5;
 const COLUMN_WIDTH = Math.floor(TABLE_WIDTH / COLUMNS_PER_PAGE);
 const ROW_HEIGHT = isLandscape ? 1410 : 1740;
 const BLUE = "0757A5";
+const HEADING_COLOR = withoutHash(style.headingColor);
+const TITLE_COLOR = withoutHash(style.titleColor);
 
 const children = [];
 
@@ -56,8 +59,9 @@ children.push(new Paragraph({
   children: [new TextRun({
     text: "TABLERO DE COMUNICACIÃ“N POR PICTOGRAMAS",
     bold: true,
-    color: "004B93",
-    size: 22
+    color: HEADING_COLOR,
+    font: style.headingFont,
+    size: style.headingSize * 2
   })],
   alignment: AlignmentType.CENTER,
   spacing: { before: 0, after: 20 }
@@ -67,11 +71,12 @@ children.push(new Paragraph({
   children: [new TextRun({
     text: board.title.toUpperCase(),
     bold: true,
-    color: "004B93",
-    size: 40
+    color: TITLE_COLOR,
+    font: style.titleFont,
+    size: style.titleSize * 2
   })],
   alignment: AlignmentType.CENTER,
-  border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: "004B93" } },
+  border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: HEADING_COLOR } },
   spacing: { before: 0, after: 80 }
 }));
 
@@ -167,6 +172,31 @@ function loadImage(cell) {
 function imageType(cell) {
   if (cell.imageData?.startsWith("data:image/jpeg")) return "jpg";
   return "png";
+}
+
+function normalizeStyle(style = {}) {
+  return {
+    headingColor: /^#[0-9a-f]{6}$/i.test(style.headingColor || "") ? style.headingColor : "#004b93",
+    titleColor: /^#[0-9a-f]{6}$/i.test(style.titleColor || "") ? style.titleColor : "#004b93",
+    headingFont: safeFont(style.headingFont),
+    titleFont: safeFont(style.titleFont),
+    headingSize: clamp(style.headingSize, 8, 18, 11),
+    titleSize: clamp(style.titleSize, 16, 38, 23)
+  };
+}
+
+function withoutHash(value) {
+  return String(value || "#004b93").replace(/^#/, "").toUpperCase();
+}
+
+function safeFont(value) {
+  const allowed = new Set(["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Noto Sans"]);
+  return allowed.has(value) ? value : "Arial";
+}
+
+function clamp(value, min, max, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(max, Math.max(min, Math.round(number))) : fallback;
 }
 
 

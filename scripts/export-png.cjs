@@ -6,6 +6,7 @@ const { chromium } = require("playwright");
 const [input, output, root] = process.argv.slice(2);
 const payload = JSON.parse(fs.readFileSync(input, "utf8"));
 const board = payload.board || {};
+const style = normalizeStyle(board.style);
 
 (async () => {
   const isLandscape = board.orientation === "horizontal";
@@ -23,7 +24,7 @@ const board = payload.board || {};
     : `<header class="heading vertical">${header ? `<img class="brand" src="${header}">` : ""}<div class="k">TABLERO DE COMUNICACIÓN POR PICTOGRAMAS</div><div class="rule"></div><h1 class="title">${esc(board.title.toUpperCase())}</h1></header>`;
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>
   *{box-sizing:border-box}body{margin:0;background:#fff;font-family:Arial}.page{position:relative;width:${viewport.width}px;height:${viewport.height}px;padding:16px 45px 45px;background:#fff;overflow:hidden}
-  .heading.vertical{text-align:center}.heading.horizontal{display:grid;grid-template-columns:48% 1fr;grid-template-areas:'brand title' 'rule rule';align-items:center;gap:10px;margin-bottom:7px}.brand{width:58.4%;height:84px;object-fit:contain;object-position:left top}.heading.horizontal .brand{grid-area:brand;width:100%;height:69px;object-position:left center}.titlebox{grid-area:title;text-align:left}.k{color:#004b93;font-weight:700;font-size:14px;letter-spacing:1px}.rule{width:80%;height:2px;background:#004b93;margin:4px auto}.heading.horizontal .rule{grid-area:rule;width:100%;margin:4px 0}.title{color:#004b93;font-size:30px;font-weight:800;margin:0 0 8px}.heading.horizontal .title{margin:0;font-size:29px;text-align:left}
+  .heading.vertical{text-align:center}.heading.horizontal{display:grid;grid-template-columns:48% 1fr;grid-template-areas:'brand title' 'rule rule';align-items:center;gap:10px;margin-bottom:7px}.brand{width:58.4%;height:84px;object-fit:contain;object-position:left top}.heading.horizontal .brand{grid-area:brand;width:100%;height:69px;object-position:left center}.titlebox{grid-area:title;text-align:left}.k{color:${style.headingColor};font-family:${fontStack(style.headingFont)};font-weight:700;font-size:${style.headingSize}pt;letter-spacing:1px}.rule{width:80%;height:2px;background:${style.headingColor};margin:4px auto}.heading.horizontal .rule{grid-area:rule;width:100%;margin:4px 0}.title{color:${style.titleColor};font-family:${fontStack(style.titleFont)};font-size:${style.titleSize * 1.3}px;font-weight:800;margin:0 0 8px}.heading.horizontal .title{margin:0;text-align:left}
   .grid{height:${gridHeight}px;display:grid;grid-template-columns:repeat(${columns},1fr);grid-template-rows:repeat(${rows},1fr);gap:7px}.cell{border:2.5px solid #0757a5;border-radius:10px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}.cell img{width:100%;height:calc(100% - 28px);object-fit:contain}.cell strong{font-size:16px;text-align:center}.empty{border-style:dashed;border-color:#aaa}
   footer{position:absolute;left:45px;right:45px;bottom:18px;border-top:1px solid #777;padding-top:4px;font-size:6px;text-align:center}</style></head><body>
   <section class="page">${heading}<main class="grid">${cards}</main><footer>${esc(payload.footer)}</footer></section></body></html>`;
@@ -49,3 +50,25 @@ function resolveImage(cell) {
   return cell.imageUrl || "";
 }
 function esc(value=""){return String(value).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function normalizeStyle(style = {}) {
+  return {
+    headingColor: /^#[0-9a-f]{6}$/i.test(style.headingColor || "") ? style.headingColor : "#004b93",
+    titleColor: /^#[0-9a-f]{6}$/i.test(style.titleColor || "") ? style.titleColor : "#004b93",
+    headingFont: safeFont(style.headingFont),
+    titleFont: safeFont(style.titleFont),
+    headingSize: clamp(style.headingSize, 8, 18, 11),
+    titleSize: clamp(style.titleSize, 16, 38, 23)
+  };
+}
+function safeFont(value) {
+  const allowed = new Set(["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Noto Sans"]);
+  return allowed.has(value) ? value : "Arial";
+}
+function fontStack(value) {
+  return `"${safeFont(value)}", Arial, sans-serif`;
+}
+function clamp(value, min, max, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(max, Math.max(min, Math.round(number))) : fallback;
+}

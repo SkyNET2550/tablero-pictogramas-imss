@@ -13,6 +13,15 @@ const AUTOSAVE_KEY = "arasaac-custom-boards-autosave-v1";
 const CELLS_PER_PAGE = APP_CONFIG.pictogramsPerPage;
 const COLUMNS_PER_PAGE = 4;
 const LANDSCAPE_COLUMNS_PER_PAGE = 5;
+const DEFAULT_BOARD_STYLE = Object.freeze({
+  headingColor: "#004b93",
+  titleColor: "#004b93",
+  headingFont: "Arial",
+  titleFont: "Arial",
+  headingSize: 11,
+  titleSize: 23
+});
+const BOARD_FONT_OPTIONS = new Set(["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Georgia", "Times New Roman", "Noto Sans"]);
 const editor = document.querySelector("#board-editor");
 const picker = document.querySelector("#pictogram-picker");
 const page = document.querySelector("#editor-page");
@@ -20,6 +29,14 @@ const list = document.querySelector("#board-list");
 const titleInput = document.querySelector("#editor-title");
 const semanticDialog = document.querySelector("#editor-semantic-dialog");
 const orientationInputs = document.querySelectorAll('input[name="board-orientation"]');
+const boardStyleControls = {
+  headingColor: document.querySelector("#board-heading-color"),
+  titleColor: document.querySelector("#board-title-color"),
+  headingFont: document.querySelector("#board-heading-font"),
+  titleFont: document.querySelector("#board-title-font"),
+  headingSize: document.querySelector("#board-heading-size"),
+  titleSize: document.querySelector("#board-title-size")
+};
 let boards = loadBoards();
 let activeId = boards[0].id;
 let replaceIndex = null;
@@ -54,6 +71,8 @@ export function initBoardEditor() {
   document.querySelector("#attach-template-button").addEventListener("click", () => document.querySelector("#template-file-input").click());
   document.querySelector("#template-file-input").addEventListener("change", attachBoardTemplate);
   orientationInputs.forEach(input => input.addEventListener("change", updateBoardOrientation));
+  Object.values(boardStyleControls).filter(Boolean).forEach(control => control.addEventListener("input", updateBoardStyle));
+  document.querySelector("#reset-board-design-button")?.addEventListener("click", resetBoardStyle);
   document.querySelector("#picker-search").addEventListener("submit", searchPicker);
   document.querySelector("#png-file-input").addEventListener("change", selectPngFile);
   document.querySelector("#picker-label").addEventListener("blur", event => {
@@ -113,7 +132,7 @@ export function choosePictogramForConcept({ term, groupId, onSelected }) {
   document.querySelector("#picker-results").replaceChildren();
   document.querySelector("#picker-results").hidden = false;
   document.querySelector("#picker-confirmation").hidden = true;
-  document.querySelector("#picker-status").textContent = `Busca una imagen adecuada para “${term}”.`;
+  document.querySelector("#picker-status").textContent = `Busca una imagen adecuada para “${term}.`;
   selectedPickerId = null;
   selectedPickerImage = null;
   document.querySelector("#png-file-input").value = "";
@@ -136,6 +155,7 @@ function normalizeBoard(board) {
     ...board,
     orientation: board.orientation === "horizontal" ? "horizontal" : "vertical",
     template: normalizeTemplate(board.template),
+    style: normalizeBoardStyle(board.style),
     cells: removeBoardDuplicates(cells, CELLS_PER_PAGE)
   };
 }
@@ -149,6 +169,53 @@ function normalizeTemplate(template) {
     attachedAt: template.attachedAt || null
   };
 }
+
+function normalizeBoardStyle(style = {}) {
+  return {
+    headingColor: normalizeHexColor(style.headingColor, DEFAULT_BOARD_STYLE.headingColor),
+    titleColor: normalizeHexColor(style.titleColor, DEFAULT_BOARD_STYLE.titleColor),
+    headingFont: normalizeBoardFont(style.headingFont, DEFAULT_BOARD_STYLE.headingFont),
+    titleFont: normalizeBoardFont(style.titleFont, DEFAULT_BOARD_STYLE.titleFont),
+    headingSize: clampNumber(style.headingSize, 8, 18, DEFAULT_BOARD_STYLE.headingSize),
+    titleSize: clampNumber(style.titleSize, 16, 38, DEFAULT_BOARD_STYLE.titleSize)
+  };
+}
+
+function normalizeHexColor(value, fallback) {
+  return /^#[0-9a-f]{6}$/i.test(String(value || "")) ? String(value).toLowerCase() : fallback;
+}
+
+function normalizeBoardFont(value, fallback) {
+  const font = String(value || "").trim();
+  return BOARD_FONT_OPTIONS.has(font) ? font : fallback;
+}
+
+function clampNumber(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(number)));
+}
+
+function boardStyleFor(board) {
+  return normalizeBoardStyle(rootBoardFor(board)?.style || board?.style);
+}
+
+function cssFontStack(font) {
+  const normalized = normalizeBoardFont(font, DEFAULT_BOARD_STYLE.titleFont);
+  return `"${normalized.replace(/"/g, "")}", Arial, sans-serif`;
+}
+
+function applyBoardStyle(element, style) {
+  if (!element) return;
+  const normalized = normalizeBoardStyle(style);
+  element.style.setProperty("--board-heading-color", normalized.headingColor);
+  element.style.setProperty("--board-title-color", normalized.titleColor);
+  element.style.setProperty("--board-heading-font", cssFontStack(normalized.headingFont));
+  element.style.setProperty("--board-title-font", cssFontStack(normalized.titleFont));
+  element.style.setProperty("--board-heading-size", `${normalized.headingSize}pt`);
+  element.style.setProperty("--board-title-size", `${normalized.titleSize}pt`);
+}
+
 function save() {
   safeSetLocalStorage(STORAGE_KEY, JSON.stringify(boards));
   void saveBoardsToBrowser(boards).catch(() => {});
@@ -192,7 +259,7 @@ function isStorageQuotaError(error) {
 }
 
 function createBoard() {
-  const board = { id: uid(), title: `Tablero ${boards.length + 1}`, cells: Array(CELLS_PER_PAGE).fill(null) };
+  const board = { id: uid(), title: `Tablero ${boards.length + 1}`, style: normalizeBoardStyle(), cells: Array(CELLS_PER_PAGE).fill(null) };
   boards.push(board); activeId = board.id; markDirty(); save(); render();
 }
 function addBlankPage(sourceBoardId = activeId) {
@@ -208,6 +275,7 @@ function addBlankPage(sourceBoardId = activeId) {
     semanticGenerated: Boolean(root.semanticGenerated),
     manualBlankPage: true,
     semanticPage: semanticSiblingBoards(root).length + 1,
+    style: normalizeBoardStyle(root.style),
     cells: Array(CELLS_PER_PAGE).fill(null)
   };
   boards.push(newPage);
@@ -218,7 +286,7 @@ function addBlankPage(sourceBoardId = activeId) {
 }
 function deleteBoard() {
   if (boards.length === 1) {
-    boards[0] = { id: uid(), title: "Mi tablero", cells: Array(CELLS_PER_PAGE).fill(null) };
+    boards[0] = { id: uid(), title: "Mi tablero", style: normalizeBoardStyle(), cells: Array(CELLS_PER_PAGE).fill(null) };
   } else boards = boards.filter(board => board.id !== activeId);
   activeId = boards[0].id; markDirty(); save(); render();
 }
@@ -282,6 +350,7 @@ async function addSemanticGroupToEditor(event) {
   base.title = sharedTitle;
   base.semanticRootId = base.semanticRootId || base.id;
   base.semanticGenerated = true;
+  base.style = normalizeBoardStyle(base.style);
   for (let index = 0; index < unique.length; index += CELLS_PER_PAGE) {
     const cells = unique.slice(index, index + CELLS_PER_PAGE);
     const target = index === 0 ? base : {
@@ -291,6 +360,7 @@ async function addSemanticGroupToEditor(event) {
       semanticRootId: base.semanticRootId,
       semanticGenerated: true,
       semanticPage: Math.floor(index / CELLS_PER_PAGE) + 1,
+      style: normalizeBoardStyle(base.style),
       cells: Array(CELLS_PER_PAGE).fill(null)
     };
     target.cells = [...cells, ...Array(Math.max(0, CELLS_PER_PAGE - cells.length)).fill(null)];
@@ -327,6 +397,7 @@ function renderPage() {
   const orientation = boardOrientation(rootBoardFor(board));
   page.replaceChildren();
   const groupBoards = semanticSiblingBoards(board);
+  applyBoardStyle(page, boardStyleFor(board));
   page.classList.toggle("editor-page-sequence", groupBoards.length > 1);
   page.dataset.orientation = orientation;
   page.classList.toggle("editor-page--horizontal", orientation === "horizontal");
@@ -341,6 +412,10 @@ function renderPage() {
 function renderConfiguration(board) {
   const orientation = board?.orientation === "horizontal" ? "horizontal" : "vertical";
   orientationInputs.forEach(input => { input.checked = input.value === orientation; });
+  const style = boardStyleFor(board);
+  Object.entries(boardStyleControls).forEach(([key, control]) => {
+    if (control) control.value = style[key];
+  });
   const templateButton = document.querySelector("#attach-template-button");
   if (templateButton) {
     templateButton.textContent = board?.template?.name ? `Plantilla: ${board.template.name}` : "Adjuntar plantilla";
@@ -352,6 +427,30 @@ function updateBoardOrientation(event) {
   const board = activeBoard();
   if (!board || !event.target.checked) return;
   board.orientation = event.target.value === "horizontal" ? "horizontal" : "vertical";
+  markDirty(); save(); renderPage(); renderConfiguration(board);
+}
+
+function readBoardStyleControls() {
+  return normalizeBoardStyle(Object.fromEntries(
+    Object.entries(boardStyleControls).map(([key, control]) => [key, control?.value])
+  ));
+}
+
+function updateBoardStyle() {
+  const board = activeBoard();
+  if (!board) return;
+  const root = rootBoardFor(board);
+  const style = readBoardStyleControls();
+  semanticSiblingBoards(root).forEach(item => { item.style = style; });
+  root.style = style;
+  markDirty(); save(); renderPage();
+}
+
+function resetBoardStyle() {
+  const board = activeBoard();
+  if (!board) return;
+  const style = normalizeBoardStyle();
+  semanticSiblingBoards(rootBoardFor(board)).forEach(item => { item.style = style; });
   markDirty(); save(); renderPage(); renderConfiguration(board);
 }
 
@@ -398,6 +497,7 @@ function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
   wrapper.className = `editor-page-sheet editor-page-sheet--${orientation}`;
   wrapper.dataset.boardId = board.id;
   wrapper.dataset.orientation = orientation;
+  applyBoardStyle(wrapper, boardStyleFor(board));
   const header = document.createElement("header");
   header.className = "editor-board-header";
   header.innerHTML = institutionalHeaderHtml(escapeHtml(board.title), "editor-board-brand-image");
@@ -791,7 +891,7 @@ function confirmPictogram() {
 }
 function choosePictogram(selection) {
   const cell = { ...selection, validated: false };
-  if (hasPictogramDuplicate(activeBoard().cells, cell, replaceIndex ?? -1)) {
+  if (hasPictogramDuplicate(activeBoard().cells, cell, replaceIndex ? -1)) {
     document.querySelector("#picker-status").textContent = "Este pictograma ya está incluido en el tablero. Elige una imagen diferente.";
     return;
   }
@@ -1018,6 +1118,7 @@ async function exportInBrowser(format, board) {
 
 function makeWordCompatibleHtml(board) {
   const orientation = boardOrientation(board);
+  const style = boardStyleFor(board);
   const columns = boardColumnCount(board);
   const rowsPerPage = Math.ceil(CELLS_PER_PAGE / columns);
   const pageSize = orientation === "horizontal" ? "A4 landscape" : "A4 portrait";
@@ -1028,12 +1129,13 @@ function makeWordCompatibleHtml(board) {
   const rows = Array.from({ length: rowsPerPage }, (_, row) => row * columns)
     .map(start => `<tr>${cells.slice(start, start + columns).join("")}</tr>`).join("");
   const headingCss = orientation === "horizontal"
-    ? ".heading{display:grid;grid-template-columns:48% 1fr;grid-template-areas:'brand title' 'rule rule';align-items:center;gap:8pt;margin:0 0 6pt}.brand{grid-area:brand;display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.title-block{grid-area:title;text-align:left}.title-separator{grid-area:rule;width:100%;height:2pt;margin:2pt 0 4pt;background:#0757a5}"
-    : ".heading{text-align:center;margin:0 0 6pt;padding-bottom:4pt}.brand{display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.title-block{text-align:center}.title-separator{width:80%;height:2pt;margin:3pt auto 4pt;background:#0757a5}";
-  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:${pageSize};margin:.22in .34in .25in}body{font-family:Arial,sans-serif;color:#082f61;margin:0}${headingCss}.kicker{margin:2pt 0 1pt;color:#004b93;font-size:11pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}h1{text-transform:uppercase;margin:0;font-size:20pt;line-height:1;color:#004b93}table{width:${tableWidth};table-layout:fixed;border-collapse:separate;border-spacing:4pt;margin:0 auto}tr{height:${rowHeight}}td{height:${rowHeight};border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle;padding:4pt;overflow:hidden}.picto-box{width:100%;height:100%;margin:0 auto;text-align:center;overflow:hidden}td img{display:block;width:100%;height:${imageHeight};margin:0 auto;border:0;object-fit:contain}td p{height:.25in;margin:1pt 0 0;color:#111;font-weight:bold;font-size:10pt;line-height:1.05;text-align:center;overflow:hidden}footer{font-size:4pt;line-height:1.1;text-align:center;color:#555;margin-top:4pt}</style></head><body><div class="heading"><img class="brand" src="${BOARD_HEADER_IMAGE}" width="445" height="69"><div class="title-block"><p class="kicker">Tablero de comunicaci&oacute;n por pictogramas</p><h1>${escapeHtml(board.title)}</h1></div><div class="title-separator"></div></div><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
+    ? `.heading{display:grid;grid-template-columns:48% 1fr;grid-template-areas:'brand title' 'rule rule';align-items:center;gap:8pt;margin:0 0 6pt}.brand{grid-area:brand;display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.title-block{grid-area:title;text-align:left}.title-separator{grid-area:rule;width:100%;height:2pt;margin:2pt 0 4pt;background:${style.headingColor}}`
+    : `.heading{text-align:center;margin:0 0 6pt;padding-bottom:4pt}.brand{display:block;width:4.64in;height:.72in;object-fit:contain;object-position:left center}.title-block{text-align:center}.title-separator{width:80%;height:2pt;margin:3pt auto 4pt;background:${style.headingColor}}`;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:${pageSize};margin:.22in .34in .25in}body{font-family:Arial,sans-serif;color:#082f61;margin:0}${headingCss}.kicker{margin:2pt 0 1pt;color:${style.headingColor};font-family:${cssFontStack(style.headingFont)};font-size:${style.headingSize}pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase}h1{text-transform:uppercase;margin:0;font-family:${cssFontStack(style.titleFont)};font-size:${style.titleSize}pt;line-height:1;color:${style.titleColor}}table{width:${tableWidth};table-layout:fixed;border-collapse:separate;border-spacing:4pt;margin:0 auto}tr{height:${rowHeight}}td{height:${rowHeight};border:2pt solid #0757a5;border-radius:8pt;text-align:center;vertical-align:middle;padding:4pt;overflow:hidden}.picto-box{width:100%;height:100%;margin:0 auto;text-align:center;overflow:hidden}td img{display:block;width:100%;height:${imageHeight};margin:0 auto;border:0;object-fit:contain}td p{height:.25in;margin:1pt 0 0;color:#111;font-weight:bold;font-size:10pt;line-height:1.05;text-align:center;overflow:hidden}footer{font-size:4pt;line-height:1.1;text-align:center;color:#555;margin-top:4pt}</style></head><body><div class="heading"><img class="brand" src="${BOARD_HEADER_IMAGE}" width="445" height="69"><div class="title-block"><p class="kicker">Tablero de comunicaci&oacute;n por pictogramas</p><h1>${escapeHtml(board.title)}</h1></div><div class="title-separator"></div></div><table>${rows}</table><footer>${escapeHtml(INSTITUTIONAL_FOOTER)}</footer></body></html>`;
 }
 
 async function makeBoardSvgImage(board) {
+  const style = boardStyleFor(board);
   const cells = printableCells(board);
   const cardWidth = 170;
   const cardHeight = 155;
@@ -1043,9 +1145,9 @@ async function makeBoardSvgImage(board) {
   const parts = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="816" height="1056" viewBox="0 0 816 1056">`,
     `<rect width="816" height="1056" fill="#fff"/>`,
-    `<text x="408" y="120" text-anchor="middle" font-family="Arial" font-size="17" font-weight="700" fill="#004b93">TABLERO DE COMUNICACIÓN POR PICTOGRAMAS</text>`,
-    `<text x="408" y="153" text-anchor="middle" font-family="Arial" font-size="30" font-weight="800" fill="#004b93">${escapeSvg(board.title.toUpperCase())}</text>`,
-    `<rect x="118" y="168" width="580" height="3" fill="#004b93"/>`
+    `<text x="408" y="120" text-anchor="middle" font-family="${escapeSvg(style.headingFont)}" font-size="${style.headingSize * 1.55}" font-weight="700" fill="${escapeSvg(style.headingColor)}">TABLERO DE COMUNICACIN POR PICTOGRAMAS</text>`,
+    `<text x="408" y="153" text-anchor="middle" font-family="${escapeSvg(style.titleFont)}" font-size="${style.titleSize * 1.3}" font-weight="800" fill="${escapeSvg(style.titleColor)}">${escapeSvg(board.title.toUpperCase())}</text>`,
+    `<rect x="118" y="168" width="580" height="3" fill="${escapeSvg(style.headingColor)}"/>`
   ];
   cells.forEach((cell, index) => {
     const col = index % 4;
@@ -1184,3 +1286,4 @@ function saveConceptSelection(term, selection) {
   selections[term.toLocaleLowerCase("es")] = selection;
   localStorage.setItem(key, JSON.stringify(selections));
 }
+

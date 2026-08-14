@@ -24,6 +24,27 @@ test("la configuración de disposición y plantilla queda habilitada por tablero
   assert.match(editor, /board\.template/);
 });
 
+test("el diseño de títulos y encabezados se configura por tablero y llega a exportaciones", async () => {
+  const html = await readFile("index.html", "utf8");
+  const css = await readFile("styles/print-letter.css", "utf8");
+  const editor = await readFile("src/board-editor.js", "utf8");
+  const pdf = await readFile("scripts/export-pdf.cjs", "utf8");
+  const png = await readFile("scripts/export-png.cjs", "utf8");
+  const docx = await readFile("scripts/export-docx.cjs", "utf8");
+
+  for (const id of ["board-heading-color", "board-title-color", "board-heading-font", "board-title-font", "board-heading-size", "board-title-size", "reset-board-design-button"]) {
+    assert.match(html, new RegExp(id));
+  }
+  assert.match(css, /--board-heading-color/);
+  assert.match(css, /--board-title-font/);
+  assert.match(editor, /DEFAULT_BOARD_STYLE/);
+  assert.match(editor, /function updateBoardStyle/);
+  assert.match(editor, /style: normalizeBoardStyle/);
+  assert.match(pdf, /normalizeStyle\(board\.style\)/);
+  assert.match(png, /normalizeStyle\(board\.style\)/);
+  assert.match(docx, /normalizeStyle\(board\.style\)/);
+});
+
 test("el servidor genera PDF real y deja de exponer exportación JPG", async () => {
   const server = await readFile("scripts/server.js", "utf8");
   const exporter = await readFile("scripts/export-pdf.cjs", "utf8");
