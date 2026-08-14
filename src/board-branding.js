@@ -9,10 +9,10 @@ export const BOARD_INSTITUTION_LINES = [
 export function institutionalHeaderHtml(title, imageClass = "board-brand-image", titleClass = "") {
   return `<div class="board-header-top">
       <img class="${imageClass}" src="${BOARD_HEADER_IMAGE}" alt="Gobierno de México e Instituto Mexicano del Seguro Social">
-      <div class="board-title-block">
-        <p class="board-kicker">Tablero de comunicación por pictogramas</p>
-        <h1${titleClass ? ` class="${titleClass}"` : ""}>${title}</h1>
-      </div>
+    </div>
+    <div class="board-title-block">
+      <p class="board-kicker">Tablero de comunicación por pictogramas</p>
+      <h1${titleClass ? ` class="${titleClass}"` : ""}>${title}</h1>
     </div>
     <div class="board-title-separator" aria-hidden="true"></div>`;
 }
