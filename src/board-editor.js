@@ -891,7 +891,7 @@ function confirmPictogram() {
 }
 function choosePictogram(selection) {
   const cell = { ...selection, validated: false };
-  if (hasPictogramDuplicate(activeBoard().cells, cell, replaceIndex ? -1)) {
+  if (hasPictogramDuplicate(activeBoard().cells, cell, replaceIndex ?? -1)) {
     document.querySelector("#picker-status").textContent = "Este pictograma ya está incluido en el tablero. Elige una imagen diferente.";
     return;
   }
@@ -1286,4 +1286,3 @@ function saveConceptSelection(term, selection) {
   selections[term.toLocaleLowerCase("es")] = selection;
   localStorage.setItem(key, JSON.stringify(selections));
 }
-
