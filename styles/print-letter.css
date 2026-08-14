@@ -176,6 +176,7 @@ dialog::backdrop { background: #001b31cc; }
 .editor-page-sequence { width: min(210mm, 100%); min-height: auto; padding: 0; background: transparent; box-shadow: none; display: flex; flex-direction: column; gap: 18px; }
 .editor-page-sequence[data-orientation="horizontal"] { width: min(297mm, 100%); }
 .editor-page-sheet { position: relative; width: 210mm; min-height: 297mm; max-width: 100%; margin: 0 auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto auto 1fr; }
+.editor-page--custom-template, .editor-page-sheet--custom-template { background-image: var(--board-template-image); background-size: 100% 100%; background-position: center; background-repeat: no-repeat; }
 .editor-page-sheet--horizontal { width: 297mm; min-height: 210mm; }
 .editor-page-controls { display: flex; justify-content: flex-end; align-items: center; gap: 7px; margin-bottom: 7px; color: #2d526c; font-size: 12px; }
 .editor-page-controls span { margin-right: auto; font-weight: 700; }

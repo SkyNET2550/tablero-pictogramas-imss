@@ -4,13 +4,13 @@ import { readFile } from "node:fs/promises";
 
 test("el panel separa guardar de acciones y limita exportaciones", async () => {
   const html = await readFile("index.html", "utf8");
-  for (const label of ["Exportar PDF", "Exportar imagen", "Exportar Word editable", "Guardar", "Abrir tableros guardados", "Imprimir tablero", "Configuración", "Vertical", "Horizontal", "Adjuntar plantilla"]) {
+  for (const label of ["Exportar PDF", "Exportar imagen", "Exportar Word editable", "Guardar", "Abrir tableros guardados", "Imprimir tablero", "Configuración", "Vertical", "Horizontal", "Adjuntar plantilla", "Aplicar", "Eliminar plantilla"]) {
     assert.match(html, new RegExp(label));
   }
   assert.match(html, /sidebar-save-actions/);
   assert.match(html, /sidebar-config-actions/);
   assert.match(html, /<h3>Guardar<\/h3>[\s\S]*id="save-editable-button"[\s\S]*id="open-editable-button"[\s\S]*id="delete-board-button"/);
-  assert.match(html, /<h3>Configuración<\/h3>[\s\S]*name="board-orientation"[\s\S]*value="vertical"[\s\S]*value="horizontal"[\s\S]*id="attach-template-button"[\s\S]*id="template-file-input"/);
+  assert.match(html, /<h3>Configuración<\/h3>[\s\S]*name="board-orientation"[\s\S]*value="vertical"[\s\S]*value="horizontal"[\s\S]*id="attach-template-button"[\s\S]*id="apply-template-button"[\s\S]*id="remove-template-button"[\s\S]*id="template-file-input"/);
   assert.match(html, /<h3>Acciones<\/h3>[\s\S]*id="export-pdf-button"[\s\S]*id="export-image-button"[\s\S]*id="export-docx-button"[\s\S]*id="print-current-button"/);
   assert.doesNotMatch(html, /duplicate-board-button|Duplicar tablero|Exportar HTML|Exportar JPG|Exportar PNG|Guardar copia editable|Exportar DOCX editable|Abrir tablero editable/);
 });
@@ -20,6 +20,9 @@ test("la configuración de disposición y plantilla queda habilitada por tablero
   assert.match(editor, /orientationInputs/);
   assert.match(editor, /function updateBoardOrientation/);
   assert.match(editor, /function attachBoardTemplate/);
+  assert.match(editor, /function applyPendingTemplate/);
+  assert.match(editor, /function removeBoardTemplate/);
+  assert.match(editor, /pendingTemplate/);
   assert.match(editor, /data:image\/png/);
   assert.match(editor, /board\.template/);
 });

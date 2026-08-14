@@ -43,6 +43,7 @@ let draggedCell = null;
 let selectedPickerId = null;
 let selectedPickerImage = null;
 let externalSelection = null;
+let pendingTemplate = null;
 let semanticDraftDirty = false;
 let editorDirty = false;
 let editorSessionSnapshot = null;
@@ -69,6 +70,8 @@ export function initBoardEditor() {
   document.querySelector("#open-editable-input").addEventListener("change", openEditableBoard);
   document.querySelector("#attach-template-button").addEventListener("click", () => document.querySelector("#template-file-input").click());
   document.querySelector("#template-file-input").addEventListener("change", attachBoardTemplate);
+  document.querySelector("#apply-template-button").addEventListener("click", applyPendingTemplate);
+  document.querySelector("#remove-template-button").addEventListener("click", removeBoardTemplate);
   orientationInputs.forEach(input => input.addEventListener("change", updateBoardOrientation));
   Object.values(boardStyleControls).filter(Boolean).forEach(control => control.addEventListener("input", updateBoardStyle));
   document.querySelector("#reset-board-design-button")?.addEventListener("click", resetBoardStyle);
@@ -275,6 +278,7 @@ function addBlankPage(sourceBoardId = activeId) {
     manualBlankPage: true,
     semanticPage: semanticSiblingBoards(root).length + 1,
     style: normalizeBoardStyle(root.style),
+    template: normalizeTemplate(root.template),
     cells: Array(CELLS_PER_PAGE).fill(null)
   };
   boards.push(newPage);
@@ -359,6 +363,7 @@ async function addSemanticGroupToEditor(event) {
       semanticGenerated: true,
       semanticPage: Math.floor(index / CELLS_PER_PAGE) + 1,
       style: normalizeBoardStyle(base.style),
+      template: normalizeTemplate(base.template),
       cells: Array(CELLS_PER_PAGE).fill(null)
     };
     target.cells = [...cells, ...Array(Math.max(0, CELLS_PER_PAGE - cells.length)).fill(null)];
@@ -396,6 +401,7 @@ function renderPage() {
   page.replaceChildren();
   const groupBoards = semanticSiblingBoards(board);
   applyBoardStyle(page, boardStyleFor(board));
+  applyBoardTemplate(page, groupBoards.length > 1 ? null : boardTemplateFor(board));
   page.classList.toggle("editor-page-sequence", groupBoards.length > 1);
   page.dataset.orientation = orientation;
   page.classList.toggle("editor-page--horizontal", orientation === "horizontal");
@@ -415,9 +421,27 @@ function renderConfiguration(board) {
     if (control) control.value = style[key];
   });
   const templateButton = document.querySelector("#attach-template-button");
+  const applyTemplateButton = document.querySelector("#apply-template-button");
+  const removeTemplateButton = document.querySelector("#remove-template-button");
   if (templateButton) {
-    templateButton.textContent = board?.template?.name ? `Plantilla: ${board.template.name}` : "Adjuntar plantilla";
-    templateButton.title = board?.template?.name ? `Plantilla adjunta: ${board.template.name}` : "Adjuntar plantilla PNG";
+    templateButton.textContent = pendingTemplate?.name || board?.template?.name
+      ? `Plantilla: ${pendingTemplate?.name || board.template.name}`
+      : "Adjuntar plantilla";
+    templateButton.title = pendingTemplate?.name
+      ? `Plantilla seleccionada pendiente de aplicar: ${pendingTemplate.name}`
+      : board?.template?.name
+        ? `Plantilla aplicada: ${board.template.name}`
+        : "Adjuntar plantilla PNG";
+  }
+  if (applyTemplateButton) {
+    applyTemplateButton.disabled = !pendingTemplate;
+    applyTemplateButton.title = pendingTemplate ? `Aplicar ${pendingTemplate.name}` : "Selecciona una plantilla PNG antes de aplicar";
+  }
+  if (removeTemplateButton) {
+    removeTemplateButton.disabled = !board?.template && !pendingTemplate;
+    removeTemplateButton.title = board?.template || pendingTemplate
+      ? "Eliminar plantilla y volver a la plantilla por defecto"
+      : "No hay plantilla aplicada";
   }
 }
 
@@ -453,9 +477,8 @@ function resetBoardStyle() {
 }
 
 function attachBoardTemplate(event) {
-  const board = activeBoard();
   const file = event.target.files?.[0];
-  if (!board || !file) return;
+  if (!activeBoard() || !file) return;
   if (file.type !== "image/png" && !file.name.toLowerCase().endsWith(".png")) {
     alert("La plantilla debe estar en formato PNG.");
     event.target.value = "";
@@ -463,12 +486,12 @@ function attachBoardTemplate(event) {
   }
   const reader = new FileReader();
   reader.addEventListener("load", () => {
-    board.template = {
+    pendingTemplate = {
       name: file.name,
       dataUrl: String(reader.result || ""),
       attachedAt: new Date().toISOString()
     };
-    markDirty(); save(); renderConfiguration(board);
+    renderConfiguration(activeBoard());
     event.target.value = "";
   }, { once: true });
   reader.addEventListener("error", () => {
@@ -476,6 +499,28 @@ function attachBoardTemplate(event) {
     event.target.value = "";
   }, { once: true });
   reader.readAsDataURL(file);
+}
+
+function applyPendingTemplate() {
+  const board = activeBoard();
+  if (!board || !pendingTemplate) return;
+  const root = rootBoardFor(board);
+  const template = normalizeTemplate(pendingTemplate);
+  if (!template) return;
+  semanticSiblingBoards(root).forEach(item => { item.template = template; });
+  root.template = template;
+  pendingTemplate = null;
+  markDirty(); save(); renderPage(); renderConfiguration(board);
+}
+
+function removeBoardTemplate() {
+  const board = activeBoard();
+  if (!board) return;
+  const root = rootBoardFor(board);
+  semanticSiblingBoards(root).forEach(item => { delete item.template; });
+  delete root.template;
+  pendingTemplate = null;
+  markDirty(); save(); renderPage(); renderConfiguration(board);
 }
 
 function semanticSiblingBoards(board) {
@@ -496,6 +541,7 @@ function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
   wrapper.dataset.boardId = board.id;
   wrapper.dataset.orientation = orientation;
   applyBoardStyle(wrapper, boardStyleFor(board));
+  applyBoardTemplate(wrapper, boardTemplateFor(board));
   const header = document.createElement("header");
   header.className = "editor-board-header";
   header.innerHTML = institutionalHeaderHtml(escapeHtml(board.title), "editor-board-brand-image");
@@ -517,6 +563,21 @@ function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
   footer.className = "editor-license"; footer.textContent = INSTITUTIONAL_FOOTER;
   wrapper.append(controls, header, grid, footer);
   return wrapper;
+}
+
+function boardTemplateFor(board) {
+  return normalizeTemplate(rootBoardFor(board)?.template || board?.template);
+}
+
+function applyBoardTemplate(element, template) {
+  if (!element) return;
+  if (!template?.dataUrl) {
+    element.classList.remove("editor-page-sheet--custom-template");
+    element.style.removeProperty("--board-template-image");
+    return;
+  }
+  element.classList.add("editor-page-sheet--custom-template");
+  element.style.setProperty("--board-template-image", `url("${template.dataUrl.replace(/"/g, "%22")}")`);
 }
 
 function validateBoardPage(boardId) {
