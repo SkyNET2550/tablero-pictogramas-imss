@@ -35,6 +35,7 @@ test("los tableros semánticos se presentan como páginas secuenciales hacia aba
   assert.match(editor, /Eliminar p.gina/);
   assert.match(editor, /data-page-action="add">Agregar p.gina/);
   assert.match(styles, /\.editor-page-sequence \{[^}]*flex-direction: column/s);
+  assert.match(styles, /\.editor-page \{[^}]*grid-template-rows: auto auto 1fr/s);
 });
 
 test("eliminar un pictograma compacta la página y desplaza los posteriores", async () => {

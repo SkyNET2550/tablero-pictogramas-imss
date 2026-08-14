@@ -168,7 +168,7 @@ dialog::backdrop { background: #001b31cc; }
 .editor-properties input, .picker-shell input { min-height: 38px; padding: 7px 9px; border: 1px solid #9badbd; border-radius: 5px; }
 .editor-properties > button { min-height: 38px; white-space: nowrap; }
 .semantic-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.editor-page { position: relative; width: 210mm; min-height: 297mm; max-width: 100%; margin: auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto 1fr; }
+.editor-page { position: relative; width: 210mm; min-height: 297mm; max-width: 100%; margin: auto; padding: 3.15mm 9mm 9mm; background: #fff; box-shadow: 0 3px 14px #0003; display: grid; grid-template-rows: auto auto 1fr; }
 .editor-page.editor-page--horizontal { width: 297mm; min-height: 210mm; }
 .editor-page-sequence { width: min(210mm, 100%); min-height: auto; padding: 0; background: transparent; box-shadow: none; display: flex; flex-direction: column; gap: 18px; }
 .editor-page-sequence[data-orientation="horizontal"] { width: min(297mm, 100%); }
