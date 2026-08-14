@@ -9,14 +9,11 @@ import { loadBoardsFromBrowser, saveBoardsToBrowser } from "./browser-storage.js
 
 const STORAGE_KEY = "arasaac-custom-boards-v1";
 const AUTOSAVE_KEY = "arasaac-custom-boards-autosave-v1";
-const HORIZONTAL_TEMPLATE_URL = "./assets/templates/plantilla-hor-picto.png";
 const editor = document.querySelector("#board-editor");
 const picker = document.querySelector("#pictogram-picker");
 const page = document.querySelector("#editor-page");
 const list = document.querySelector("#board-list");
 const titleInput = document.querySelector("#editor-title");
-const orientationSelect = document.querySelector("#board-orientation-select");
-const templateFileInput = document.querySelector("#template-file-input");
 const semanticDialog = document.querySelector("#editor-semantic-dialog");
 let boards = loadBoards();
 let activeId = boards[0].id;
@@ -57,11 +54,6 @@ export function initBoardEditor() {
   document.querySelector("#back-to-results-button").addEventListener("click", showPickerResults);
   document.querySelector("#confirm-pictogram-button").addEventListener("click", confirmPictogram);
   document.querySelector("#editor-add-semantic-group").addEventListener("click", openEditorSemanticDialog);
-  orientationSelect.addEventListener("change", updateBoardOrientation);
-  document.querySelector("#use-horizontal-template-button").addEventListener("click", applyDefaultHorizontalTemplate);
-  document.querySelector("#upload-template-button").addEventListener("click", () => templateFileInput.click());
-  document.querySelector("#clear-template-button").addEventListener("click", clearBoardTemplate);
-  templateFileInput.addEventListener("change", selectTemplatePng);
   document.querySelector("#close-editor-semantic").addEventListener("click", () => closeAccessibleDialog(semanticDialog));
   document.querySelector("#clear-editor-semantic").addEventListener("click", () => {
     document.querySelector("#editor-semantic-terms").value = "";
@@ -91,8 +83,6 @@ export function openPredefinedBoardEditor(predefinedBoard) {
       id: uid(),
       predefinedId: predefinedBoard.id,
       title: predefinedBoard.title,
-      orientation: "portrait",
-      template: null,
       cells: Array(16).fill(null)
     };
     boards.push(board);
@@ -129,18 +119,12 @@ function loadBoards() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (Array.isArray(saved) && saved.length) return saved.map(normalizeBoard);
   } catch {}
-  return [{ id: uid(), title: "Mi tablero", orientation: "portrait", template: null, cells: Array(16).fill(null) }];
+  return [{ id: uid(), title: "Mi tablero", cells: Array(16).fill(null) }];
 }
 function normalizeBoard(board) {
   const cells = Array.isArray(board.cells) ? board.cells.slice(0, 16) : [];
   while (cells.length < 16) cells.push(null);
-  const orientation = board.orientation === "landscape" ? "landscape" : "portrait";
-  const template = board.template?.imageData ? {
-    name: board.template.name || "Plantilla PNG",
-    imageData: board.template.imageData,
-    fit: board.template.fit || "cover"
-  } : null;
-  return { ...board, orientation, template, cells: removeBoardDuplicates(cells) };
+  return { ...board, cells: removeBoardDuplicates(cells) };
 }
 function save() {
   safeSetLocalStorage(STORAGE_KEY, JSON.stringify(boards));
@@ -185,7 +169,7 @@ function isStorageQuotaError(error) {
 }
 
 function createBoard() {
-  const board = { id: uid(), title: `Tablero ${boards.length + 1}`, orientation: "portrait", template: null, cells: Array(16).fill(null) };
+  const board = { id: uid(), title: `Tablero ${boards.length + 1}`, cells: Array(16).fill(null) };
   boards.push(board); activeId = board.id; markDirty(); save(); render();
 }
 function addBlankPage(sourceBoardId = activeId) {
@@ -200,8 +184,6 @@ function addBlankPage(sourceBoardId = activeId) {
     semanticRootId: rootId,
     semanticGenerated: Boolean(root.semanticGenerated),
     manualBlankPage: true,
-    orientation: root.orientation || "portrait",
-    template: root.template || null,
     semanticPage: semanticSiblingBoards(root).length + 1,
     cells: Array(16).fill(null)
   };
@@ -213,7 +195,7 @@ function addBlankPage(sourceBoardId = activeId) {
 }
 function deleteBoard() {
   if (boards.length === 1) {
-    boards[0] = { id: uid(), title: "Mi tablero", orientation: "portrait", template: null, cells: Array(16).fill(null) };
+    boards[0] = { id: uid(), title: "Mi tablero", cells: Array(16).fill(null) };
   } else boards = boards.filter(board => board.id !== activeId);
   activeId = boards[0].id; markDirty(); save(); render();
 }
@@ -229,67 +211,6 @@ function updateProperties() {
     board.title = nextTitle;
   }
   markDirty(); save(); renderPage(); renderList();
-}
-
-function updateBoardOrientation() {
-  const board = activeBoard();
-  const root = rootBoardFor(board);
-  const nextOrientation = orientationSelect.value === "landscape" ? "landscape" : "portrait";
-  semanticSiblingBoards(root).forEach(item => { item.orientation = nextOrientation; });
-  markDirty(); save(); renderPage();
-}
-
-function clearBoardTemplate() {
-  const root = rootBoardFor(activeBoard());
-  semanticSiblingBoards(root).forEach(item => { item.template = null; });
-  templateFileInput.value = "";
-  markDirty(); save(); renderPage();
-}
-
-async function applyDefaultHorizontalTemplate() {
-  try {
-    const response = await fetch(HORIZONTAL_TEMPLATE_URL);
-    if (!response.ok) throw new Error("No se pudo cargar la plantilla horizontal.");
-    const blob = await response.blob();
-    const imageData = await blobToDataUrl(blob);
-    const root = rootBoardFor(activeBoard());
-    const template = { name: "Plantilla horizontal IMSS", imageData, fit: "cover" };
-    semanticSiblingBoards(root).forEach(item => {
-      item.orientation = "landscape";
-      item.template = template;
-    });
-    orientationSelect.value = "landscape";
-    markDirty(); save(); renderPage();
-  } catch (error) {
-    alert(error.message || "No se pudo aplicar la plantilla horizontal.");
-  }
-}
-
-function selectTemplatePng(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  if (file.type && file.type !== "image/png") {
-    alert("Selecciona una imagen PNG para usarla como plantilla.");
-    event.target.value = "";
-    return;
-  }
-  const reader = new FileReader();
-  reader.addEventListener("load", () => {
-    const root = rootBoardFor(activeBoard());
-    const template = { name: file.name, imageData: String(reader.result), fit: "cover" };
-    semanticSiblingBoards(root).forEach(item => { item.template = template; });
-    markDirty(); save(); renderPage();
-  });
-  reader.readAsDataURL(file);
-}
-
-function blobToDataUrl(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener("load", () => resolve(String(reader.result)));
-    reader.addEventListener("error", reject);
-    reader.readAsDataURL(blob);
-  });
 }
 
 function openEditorSemanticDialog() {
@@ -346,8 +267,6 @@ async function addSemanticGroupToEditor(event) {
       semanticParentId: base.id,
       semanticRootId: base.semanticRootId,
       semanticGenerated: true,
-      orientation: base.orientation || "portrait",
-      template: base.template || null,
       semanticPage: Math.floor(index / 16) + 1,
       cells: Array(16).fill(null)
     };
@@ -368,7 +287,6 @@ function render() {
   renderList(); renderPage();
   const board = activeBoard();
   titleInput.value = board.title;
-  orientationSelect.value = board.orientation === "landscape" ? "landscape" : "portrait";
 }
 function renderList() {
   list.replaceChildren();
@@ -406,10 +324,8 @@ function rootBoardFor(board) {
 
 function makeBoardPage(board, pageIndex = 0, totalPages = 1) {
   const wrapper = document.createElement("section");
-  wrapper.className = `editor-page-sheet ${board.orientation === "landscape" ? "landscape" : "portrait"}${board.template?.imageData ? " has-template" : ""}`;
+  wrapper.className = "editor-page-sheet";
   wrapper.dataset.boardId = board.id;
-  wrapper.style.removeProperty("--board-template-image");
-  if (board.template?.imageData) wrapper.style.setProperty("--board-template-image", `url("${board.template.imageData}")`);
   const header = document.createElement("header");
   header.className = "editor-board-header";
   header.innerHTML = institutionalHeaderHtml(escapeHtml(board.title), "editor-board-brand-image");
@@ -837,7 +753,7 @@ function discardEditorSession() {
   }
   boards = structuredClone(editorSessionSnapshot.boards);
   activeId = editorSessionSnapshot.activeId;
-  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", orientation: "portrait", template: null, cells: Array(16).fill(null) }];
+  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", cells: Array(16).fill(null) }];
   semanticDraftDirty = false;
   editorDirty = false;
   semanticDraftSnapshots.clear();
@@ -872,7 +788,7 @@ function discardSemanticDraft() {
       boards[index] = snapshot;
     }
   }
-  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", orientation: "portrait", template: null, cells: Array(16).fill(null) }];
+  if (!boards.length) boards = [{ id: uid(), title: "Mi tablero", cells: Array(16).fill(null) }];
   activeId = boards[0].id;
   semanticDraftDirty = false;
   semanticDraftSnapshots.clear();
